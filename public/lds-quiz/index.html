@@ -52,6 +52,19 @@
   .btn-row{text-align:center}
   .btn-row .btn{margin:4px 6px}
 
+  /* Category explainers (collapsed by default) */
+  .cat-lead{font-family:var(--sans);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--pencil);text-align:center;margin:28px 0 10px}
+  .cat-details{background:#FBF8F0;border:1px solid var(--hairline);border-radius:3px;margin-bottom:8px}
+  .cat-details summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;
+    padding:12px 14px;font-weight:600;font-size:15.5px}
+  .cat-details summary::-webkit-details-marker{display:none}
+  .cat-details summary::after{content:"+";margin-left:auto;color:var(--pencil);font-family:var(--sans);font-size:17px;line-height:1}
+  .cat-details[open] summary::after{content:"\2212"}
+  .cat-details summary:hover{background:#fff}
+  .cat-swatch{width:12px;height:12px;border-radius:2px;flex:0 0 auto}
+  .cat-details p{padding:0 14px 13px;font-size:14.5px;line-height:1.6;color:var(--ink-soft)}
+
   /* Share preview modal */
   .share-modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
   .share-modal[hidden]{display:none}
@@ -155,7 +168,8 @@
     </div>
     <div id="summaries"></div>
     <p class="unsure-note" id="unsure-note"></p>
-    <div class="btn-row" style="margin-top:10px">
+    <div id="cat-explainers"></div>
+    <div class="btn-row" style="margin-top:18px">
       <button class="btn btn-ghost" onclick="retake()">Retake the quiz</button>
     </div>
   </section>
@@ -623,15 +637,45 @@ const TYPE_SUMMARY = {
  F:"Your loyalty sits with Joseph Smith and the original Restoration. You measure everything, including the modern church, against the founding revelations, and early teachings that sound strange today do not scare you. Where others see change as refinement, you tend to ask what was lost. (This describes a doctrinal orientation, not the polygamist movements that use a similar name.)",
  P:"Your loyalty sits with evidence. You want a faith that survives contact with history, science, and scholarship, and you expect the institution to be transparent and correctable. You are comfortable saying prophets are products of their time, and you weigh teachings by whether they are true and good, not by who said them."
 };
-const PAIR_SUMMARY = {
- 'OT':"You trust prophetic authority deeply, but part of you is loyal to an older, firmer version of the church. You follow the Brethren today while quietly wishing they still taught with the doctrinal confidence of an earlier era.",
- 'FO':"You honor both ends of the chain: the living prophet and the founding prophet. You are happiest when they clearly agree, and your real wrestle begins where Joseph's teachings and modern emphasis pull apart.",
- 'OP':"You are an institutionalist who reads the footnotes. You sustain the church and its leaders while staying fully awake to the historical and scientific questions, and you tend to trust the institution to keep correcting itself.",
- 'FT':"You are loyal to the old paths: the founding revelations and the doctrinal teachers who organized them. You likely feel the modern church has gone quiet on truths it once declared boldly, and you hold to those truths anyway.",
- 'PT':"A rare mix: you take revealed truth seriously as a real, knowable system, and you take evidence just as seriously. You feel the pull of both certainty and scholarship, and you refuse to fake either one.",
- 'FP':"You go to the sources. Original documents, first-hand accounts, and honest history matter more to you than official summaries, whatever conclusion they point to. You share a method with the historians and a heritage with Joseph."
+// One clear leader (gap of DOMINANT_GAP points or more over second place).
+const DOMINANT_SUMMARY = {
+ O:"This was not close. Your loyalty sits squarely with the living church: God leads through today's prophet, and whatever was taught before answers to what is taught now. Old quotes and policy reversals do not rattle you, because your anchor was never the past. It moves with the Brethren, and you like it that way.",
+ T:"This was not close. Your home is the doctrinal era of the Restoration, the confident, systematic faith taught by Talmage, Joseph Fielding Smith, and McConkie. Revealed truth, to you, is settled and knowable, and you measure the modern church against it. When the church holds that line you feel at home. When it softens or goes quiet, you hold the line anyway.",
+ F:"This was not close. Your loyalty runs to Joseph Smith and the founding revelations, and you measure everything since, including the modern church, against them. Early teachings that sound strange today do not scare you; what worries you is what may have been quietly set down along the way. (A doctrinal orientation, not the polygamist movements that borrow the name.)",
+ P:"This was not close. You weigh teachings by whether they are true and good, not by who said them. You want a faith that survives contact with history, science, and scholarship, and you expect the institution to be transparent and correctable. That prophets are products of their time is not a crisis for you. It is simply true."
 };
-const MIXED_SUMMARY = "Your answers spread fairly evenly across all four orientations. Either you hold a genuinely blended faith, or you are still working out where your loyalties sit. Both are honest places to be.";
+
+// Two-way results, ORDERED: first letter is the stronger pull.
+// 'OT' means Orthodox leading with Traditional second; 'TO' is the reverse.
+const PAIR_SUMMARY = {
+ 'OT':"You follow the Brethren today, and you mean it. But part of you misses the doctrinal confidence of an earlier church, and when a new emphasis replaces an old certainty, you feel the trade. You go with the living prophet; you just carry the older hymnal with you.",
+ 'OF':"You honor both ends of the chain, with the living prophet holding the stronger claim. You take the founding revelations seriously, but where Joseph's era and modern emphasis pull apart, you trust the church's course today. Continuity is the promise you are betting on.",
+ 'OP':"You are an institutionalist who reads the footnotes. You sustain the church and its leaders first while staying fully awake to the historical and scientific questions. Change does not threaten you. In your view, ongoing revelation is the system working exactly as designed.",
+ 'TO':"Your compass is the doctrine as it was taught by Talmage, Joseph Fielding Smith, and McConkie. You sustain the Brethren today, but you quietly measure new statements against the classics, and when the modern church softens an old teaching, you notice, and it costs you something.",
+ 'TF':"You are loyal to the old paths, and yours run deep: the founding revelations, and the doctrinal teachers who organized them into a system. You likely feel the modern church has gone quiet on truths it once declared boldly. You hold to those truths anyway.",
+ 'TP':"An honest tug-of-war. You take revealed doctrine seriously as a settled, knowable system, and you take history and evidence just as seriously, and you refuse to fake either loyalty. You conserve what you can defend and question what you cannot.",
+ 'FO':"Joseph first. The founding revelations are your standard, and the modern church earns your trust as far as it stays anchored to them. You still sustain the Brethren and stay in the pews, but your real wrestle begins where the original and the current pull apart.",
+ 'FT':"The Restoration as Joseph left it, read through the confident doctrine of the old teachers. Of all the profiles, yours is the most skeptical of adjustment: you suspect refinement is often a polite word for retreat, and you would rather keep the strange, bold original.",
+ 'FP':"You go to the sources. Original documents, first-hand accounts, and honest history matter more to you than official summaries, whatever conclusion they point toward. You test the modern church from two directions at once, against Joseph's original and against the evidence, and you notice it rarely gets a clean pass from both.",
+ 'PO':"You want the church to change, and you believe in the machinery that changes it. Prophets and policy adjustments are, to you, exactly how a living faith corrects itself. So you push and sustain at the same time, and you do not find that contradictory.",
+ 'PT':"A reformer with an heirloom. You are honest about history, science, and the need for change, yet you love the inherited faith and its firm old doctrine more than you sometimes admit. You want the church corrected, not dissolved.",
+ 'PF':"You lead with evidence, and Joseph's own record is part of your evidence. The gap between the founding era and the correlated present interests you more than either era alone. You are skeptical of official summaries from both directions, and you would rather have the complicated truth."
+};
+
+// Leading somewhere, but with a lot of passes along the way.
+function hedgedSummary(k, unsureCount){
+  return 'Your answers lean ' + TYPES[k].name + ', but you answered "not sure" or neutral ' +
+    unsureCount + ' of ' + Q.length + ' times, so hold that label loosely. It is less a verdict than a direction of travel. ' +
+    'The questions you passed on are a ready-made reading list, and the label will firm up when they stop being new.';
+}
+
+// Too many passes to categorize at all.
+const NO_SIGNAL_SUMMARY = 'You answered "not sure" or "haven\'t thought about it" on most of these questions, and that is a legitimate answer. It means these debates have not been yours yet, and no honest quiz can categorize you from the handful you took a side on. Sit with the questions that interested you, and retake this when they stop being new.';
+
+// Thresholds for choosing which summary shows.
+const DOMINANT_GAP  = 15;                      // pct points over second place
+const HEDGED_MIN    = Math.ceil(Q.length*0.3); // this many unsures = hold it loosely
+const NO_SIGNAL_MIN = Math.ceil(Q.length*0.6); // this many unsures = no category
 
 // ---------------- Engine ----------------
 let idx = 0;
@@ -859,16 +903,11 @@ function showResults(){
 
   const pct = toPercent(keys, share, shareSum);
   const sorted = keys.slice().sort((a,b)=> share[b]-share[a]);
-  lastResult = {pct, sorted, sum};   // kept for the share card
+  lastResult = {pct, sorted, sum, unsureCount};   // kept for the share card
 
   drawDonut(pct, sorted, sum);
   drawLegend(pct, sorted);
-  drawSummaries(pct, sorted, sum);
-
-  const un = document.getElementById('unsure-note');
-  un.textContent = unsureCount >= 10
-    ? 'You answered "not sure" or neutral ' + unsureCount + ' times, so treat this profile as a sketch. The questions you passed on make a good list of things to explore next.'
-    : '';
+  drawSummaries(pct, sorted, sum, unsureCount);
   show('scr-results');
 }
 
@@ -906,29 +945,45 @@ function drawLegend(pct, sorted){
   ).join('');
 }
 
-function drawSummaries(pct, sorted, sum){
+// Exactly one summary box. Which one depends first on how many questions
+// were passed on, then on how clear the lead is.
+function drawSummaries(pct, sorted, sum, unsureCount){
   const el = document.getElementById('summaries');
-  if(sum===0){
-    el.innerHTML = '<div class="summary-card"><p>Every answer was neutral or not sure, so there is no profile to draw yet. Retake it whenever some of these questions stop being new.</p></div>';
-    return;
-  }
+  const note = document.getElementById('unsure-note');
+  note.textContent = '';
   const top=sorted[0], second=sorted[1];
-  const spread = pct[sorted[0]] - pct[sorted[3]];
-  let html = '';
+  let html;
 
-  if(spread <= 12){
-    html += card('A Genuine Blend', MIXED_SUMMARY);
-    html += card('Your strongest lean: ' + TYPES[top].name, TYPE_SUMMARY[top]);
-  } else if(pct[top] - pct[second] >= 15){
-    html += card('Primary: ' + TYPES[top].name, TYPE_SUMMARY[top]);
-    html += card('Secondary: ' + TYPES[second].name, 'Your second-strongest pull. ' + TYPE_SUMMARY[second]);
+  if(sum===0 || unsureCount >= NO_SIGNAL_MIN){
+    html = card('Not Enough to Categorize', NO_SIGNAL_SUMMARY);
+  } else if(unsureCount >= HEDGED_MIN){
+    html = card('Leaning ' + TYPES[top].name + ', Held Loosely', hedgedSummary(top, unsureCount));
+  } else if(pct[top] - pct[second] >= DOMINANT_GAP){
+    html = card('Clearly ' + TYPES[top].name, DOMINANT_SUMMARY[top]);
   } else {
-    const pairKey = [top,second].sort().join('');
-    html += card(TYPES[top].name + ' / ' + TYPES[second].name, PAIR_SUMMARY[pairKey] || '');
-    html += card('Primary: ' + TYPES[top].name, TYPE_SUMMARY[top]);
-    html += card('Secondary: ' + TYPES[second].name, TYPE_SUMMARY[second]);
+    html = card(TYPES[top].name + ' / ' + TYPES[second].name, PAIR_SUMMARY[top+second]);
   }
+
+  // The small footnote only accompanies a real category, and only when the
+  // unsure count is notable but below the held-loosely threshold.
+  if(sum>0 && unsureCount >= 10 && unsureCount < HEDGED_MIN){
+    note.textContent = 'You answered "not sure" or neutral ' + unsureCount +
+      ' times, so treat this profile as a sketch. The questions you passed on make a good list of things to explore next.';
+  }
+
   el.innerHTML = html;
+  renderExplainers();
+}
+
+// The four category descriptions, collapsed behind click-to-expand rows.
+function renderExplainers(){
+  const el = document.getElementById('cat-explainers');
+  el.innerHTML = '<p class="cat-lead">What the categories mean</p>' +
+    ['O','T','F','P'].map(k =>
+      '<details class="cat-details"><summary><span class="cat-swatch" style="background:' +
+      TYPES[k].hex + '"></span>' + TYPES[k].name + '</summary><p>' +
+      esc(TYPE_SUMMARY[k]) + '</p></details>'
+    ).join('');
 }
 
 function card(h, body){
@@ -940,11 +995,11 @@ function card(h, body){
 // stays self-contained. On phones this opens the native share sheet
 // (Messages, WhatsApp, save image); elsewhere it downloads the PNG.
 
-function resultLabel(pct, sorted, sum){
-  if(sum===0) return 'No profile yet';
-  const spread = pct[sorted[0]] - pct[sorted[3]];
-  if(spread <= 12) return 'A Genuine Blend';
-  if(pct[sorted[0]] - pct[sorted[1]] >= 15) return 'Primarily ' + TYPES[sorted[0]].name;
+// Mirrors the drawSummaries branching so the card matches the page.
+function resultLabel(pct, sorted, sum, unsureCount){
+  if(sum===0 || unsureCount >= NO_SIGNAL_MIN) return 'Still deciding';
+  if(unsureCount >= HEDGED_MIN) return 'Leaning ' + TYPES[sorted[0]].name;
+  if(pct[sorted[0]] - pct[sorted[1]] >= DOMINANT_GAP) return 'Clearly ' + TYPES[sorted[0]].name;
   return TYPES[sorted[0]].name + ' / ' + TYPES[sorted[1]].name;
 }
 
@@ -995,15 +1050,16 @@ function drawShareCard(res){
     });
   }
 
-  // donut center
+  // donut center — no "primary" claim when there wasn't enough signal
+  const noSignal = res.sum===0 || res.unsureCount >= NO_SIGNAL_MIN;
   g.fillStyle='#877E6B'; g.font='600 24px '+sans;
-  g.fillText(res.sum===0?'':'P R I M A R Y', cx, cy-16);
+  g.fillText(noSignal?'':'P R I M A R Y', cx, cy-16);
   g.fillStyle='#26211A'; g.font='600 46px '+serif;
-  g.fillText(res.sum===0?'No answers':TYPES[res.sorted[0]].name, cx, cy+36);
+  g.fillText(noSignal ? (res.sum===0?'No answers':'Undecided') : TYPES[res.sorted[0]].name, cx, cy+36);
 
-  // blend / pair label
+  // result label
   g.fillStyle='#4A4336'; g.font='italic 34px '+serif;
-  g.fillText(resultLabel(res.pct,res.sorted,res.sum), W/2, 925);
+  g.fillText(resultLabel(res.pct,res.sorted,res.sum,res.unsureCount), W/2, 925);
 
   // legend rows, strongest first (matches the page legend)
   let y=1005;
@@ -1062,7 +1118,7 @@ function saveShareImage(){
     navigator.share({
       files:[file],
       title:'What Kind of Latter-day Saint Are You?',
-      text:'My result: ' + resultLabel(lastResult.pct, lastResult.sorted, lastResult.sum)
+      text:'My result: ' + resultLabel(lastResult.pct, lastResult.sorted, lastResult.sum, lastResult.unsureCount)
     }).catch(err=>{ if(err && err.name!=='AbortError') downloadBlob(blob); });
   } else {
     downloadBlob(blob);

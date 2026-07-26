@@ -65,8 +65,13 @@ All 50 questions are in the `const Q = [` array. Each question is one object:
 - For `'MC'` / `'RANK'`: `opts` is an array of `{y: 'O'|'T'|'F'|'P', t: 'answer text'}`
   - An option can use `pts` instead of `y` for a split score, e.g. `{pts:{O:1.5,P:0.5}, t:'...'}`
 
-Scoring lives in `computeTotals()`. Result write-ups live in `TYPE_SUMMARY`,
-`PAIR_SUMMARY`, and `MIXED_SUMMARY`.
+Scoring lives in `computeTotals()`. Result write-ups: `DOMINANT_SUMMARY` (one
+clear leader), `PAIR_SUMMARY` (12 ordered two-way results — `'OT'` means
+Orthodox leading with Traditional second, distinct from `'TO'`),
+`hedgedSummary()` (leading but with many unsures), and `NO_SIGNAL_SUMMARY`
+(too many unsures to categorize). Thresholds are `DOMINANT_GAP`, `HEDGED_MIN`,
+and `NO_SIGNAL_MIN` next to those constants. `TYPE_SUMMARY` holds the four
+category descriptions shown in the expanders under the result.
 
 The quiz carries its own copy of the color palette. It does not read
 `globals.css`, so a color change in one place needs the same change in the
