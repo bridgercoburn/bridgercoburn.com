@@ -751,6 +751,40 @@ function addPts(t, opt, mult){
   else t[opt.y] += 2*mult;
 }
 
+// Total points of each type sitting in the question set, whether or not anyone
+// picks them. The four types are not represented equally, so raw totals would
+// hand the win to whichever type simply appears most often. Recomputed from Q
+// on every load, so adding or removing questions cannot re-tilt the results.
+function computeExposure(){
+  const e = {O:0,T:0,F:0,P:0};
+  Q.forEach(q=>{
+    if(q.kind==='L'){ e[q.agree]+=2; e[q.disagree]+=2; }
+    else q.opts.forEach(o=>{
+      if(o.pts){ for(const k in o.pts) e[k] += o.pts[k]; }
+      else e[o.y] += 2;
+    });
+  });
+  return e;
+}
+
+// Largest-remainder rounding, so the four figures always total exactly 100
+// and the donut has no seam.
+function toPercent(keys, share, shareSum){
+  const pct = {};
+  if(!shareSum){ keys.forEach(k=> pct[k]=0); return pct; }
+  const exact = {};
+  let used = 0;
+  keys.forEach(k=>{
+    exact[k] = (share[k]/shareSum)*100;
+    pct[k] = Math.floor(exact[k]);
+    used += pct[k];
+  });
+  const byRemainder = keys.slice().sort((a,b)=>
+    (exact[b]-pct[b]) - (exact[a]-pct[a]));
+  for(let i=0; i<100-used; i++) pct[byRemainder[i % byRemainder.length]]++;
+  return pct;
+}
+
 function computeTotals(){
   const t = {O:0,T:0,F:0,P:0};
   let unsureCount = 0;
@@ -778,9 +812,16 @@ function showResults(){
   const {t, unsureCount} = computeTotals();
   const sum = t.O+t.T+t.F+t.P;
   const keys = ['O','T','F','P'];
-  const pct = {};
-  keys.forEach(k=> pct[k] = sum ? Math.round((t[k]/sum)*100) : 0);
-  const sorted = keys.slice().sort((a,b)=> t[b]-t[a]);
+
+  // Judge each type against what was available to it rather than against the
+  // raw total, so a heavily represented type cannot win on volume alone.
+  const exposure = computeExposure();
+  const share = {};
+  keys.forEach(k=> share[k] = exposure[k] ? t[k]/exposure[k] : 0);
+  const shareSum = keys.reduce((acc,k)=> acc + share[k], 0);
+
+  const pct = toPercent(keys, share, shareSum);
+  const sorted = keys.slice().sort((a,b)=> share[b]-share[a]);
 
   drawDonut(pct, sorted, sum);
   drawLegend(pct, sorted);
