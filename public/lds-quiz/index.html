@@ -681,6 +681,19 @@ const NO_SIGNAL_MIN = Math.ceil(Q.length*0.6); // this many unsures = no categor
 let idx = 0;
 let answers = new Array(Q.length).fill(null); // number | {first,second} | 'unsure' | null
 let lastResult = null; // {pct, sorted, sum} from the most recent showResults()
+// Display order for each question's options, shuffled per attempt so no
+// type benefits from always being listed first. answers[] always stores
+// ORIGINAL option indices; only the on-screen order varies.
+let optOrder = [];
+
+function shuffledIndices(n){
+  const a = Array.from({length:n}, (_,i)=>i);
+  for(let i=n-1;i>0;i--){
+    const j = (Math.random()*(i+1))|0;
+    const tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+  }
+  return a;
+}
 let pickFirst = null;   // in-progress first pick for RANK or dual MC
 let dualOn = false;     // dual-select mode for the current MC question
 
@@ -692,7 +705,7 @@ function show(id){
   window.scrollTo({top:0});
 }
 
-function startQuiz(){ idx = 0; renderQuestion(); show('scr-question'); }
+function startQuiz(){ idx = 0; optOrder = []; renderQuestion(); show('scr-question'); }
 
 function setProgress(){
   document.getElementById('gilt-fill').style.width = Math.round((idx/Q.length)*100) + '%';
@@ -741,8 +754,12 @@ function renderOptions(q, saved){
   const isPair = (q.kind==='RANK') || dualOn;
   const cur = (saved && typeof saved==='object') ? saved : null;
 
-  q.opts.forEach((o,i)=>{
+  // Render in this attempt's shuffled order; i stays the ORIGINAL index.
+  if(!optOrder[idx]) optOrder[idx] = shuffledIndices(q.opts.length);
+  optOrder[idx].forEach(i=>{
+    const o = q.opts[i];
     const b = mkOpt(o.t, !isPair && saved===i);
+    b.dataset.idx = i;
     if(isPair && cur){
       if(cur.first===i){ b.classList.add('selected'); b.innerHTML='<span class="rank-badge">1st</span>'+esc(o.t); }
       if(cur.second===i){ b.classList.add('selected'); b.innerHTML='<span class="rank-badge">2nd</span>'+esc(o.t); }
@@ -778,13 +795,18 @@ function singlePick(i, btn, box){
 }
 
 function pairPick(i, q, box){
+  // Options are shuffled on screen, so find buttons by their original
+  // index (data-idx), never by child position.
+  const optEl = k => box.querySelector('.opt[data-idx="'+k+'"]');
   if(pickFirst===null){
     pickFirst = i;
     answers[idx] = null;
-    Array.from(box.children).forEach((el,k)=>{
-      if(k < q.opts.length){ el.classList.remove('selected'); el.innerHTML = esc(q.opts[k].t); }
+    box.querySelectorAll('.opt[data-idx]').forEach(el=>{
+      const k = +el.dataset.idx;
+      el.classList.remove('selected');
+      el.innerHTML = esc(q.opts[k].t);
     });
-    const el = box.children[i];
+    const el = optEl(i);
     el.classList.add('selected');
     el.innerHTML = '<span class="rank-badge">1st</span>' + esc(q.opts[i].t);
   } else if(i === pickFirst){
@@ -792,7 +814,7 @@ function pairPick(i, q, box){
     renderQuestion();
   } else {
     answers[idx] = {first: pickFirst, second: i};
-    const el = box.children[i];
+    const el = optEl(i);
     el.classList.add('selected');
     el.innerHTML = '<span class="rank-badge">2nd</span>' + esc(q.opts[i].t);
     pickFirst = null;
@@ -832,18 +854,41 @@ function addPts(t, opt, mult){
   else t[opt.y] += 2*mult;
 }
 
-// Total points of each type sitting in the question set, whether or not anyone
-// picks them. The four types are not represented equally, so raw totals would
-// hand the win to whichever type simply appears most often. Recomputed from Q
-// on every load, so adding or removing questions cannot re-tilt the results.
+// Scoring is chance-corrected: an answer earns its points MINUS what a
+// random clicker would earn in expectation, so noise adds nothing and no
+// type profits from the kind of question it happens to appear in.
+// Agreement is also worth half of disagreement on the agree/disagree
+// questions, because agreeing is the cheaper answer (acquiescence bias).
+//
+// For one question, chanceProfile gives each type its expected points under
+// a random decisive answer (E) and the most points a single pick can earn
+// (max). Both are recomputed from Q on every load, so adding or removing
+// questions cannot re-tilt the results.
+function chanceProfile(q){
+  const E = {O:0,T:0,F:0,P:0}, max = {O:0,T:0,F:0,P:0};
+  if(q.kind==='L'){
+    E[q.agree]    += (1 + 0.5)/4;  max[q.agree]    = 1;  // SA=1, A=0.5
+    E[q.disagree] += (2 + 1)/4;    max[q.disagree] = 2;  // SD=2, D=1
+  } else {
+    const n = q.opts.length;
+    const w = q.kind==='RANK' ? 1.5 : 1;  // RANK: first (1) + second (0.5) chances
+    q.opts.forEach(o=>{
+      const pts = o.pts || {[o.y]:2};
+      for(const k in pts){
+        E[k] += pts[k]*w/n;
+        if(pts[k] > max[k]) max[k] = pts[k];
+      }
+    });
+  }
+  return {E, max};
+}
+
+// Each type's total headroom above chance — the denominator for shares.
 function computeExposure(){
   const e = {O:0,T:0,F:0,P:0};
   Q.forEach(q=>{
-    if(q.kind==='L'){ e[q.agree]+=2; e[q.disagree]+=2; }
-    else q.opts.forEach(o=>{
-      if(o.pts){ for(const k in o.pts) e[k] += o.pts[k]; }
-      else e[o.y] += 2;
-    });
+    const c = chanceProfile(q);
+    for(const k in e) e[k] += c.max[k] - c.E[k];
   });
   return e;
 }
@@ -866,16 +911,19 @@ function toPercent(keys, share, shareSum){
   return pct;
 }
 
+// Returns earned points (t), the chance baseline for the questions actually
+// answered (base), and how many answers were neutral or not-sure.
 function computeTotals(){
   const t = {O:0,T:0,F:0,P:0};
+  const base = {O:0,T:0,F:0,P:0};
   let unsureCount = 0;
   Q.forEach((q,i)=>{
     const a = answers[i];
     if(a===null || a==='unsure'){ if(a==='unsure') unsureCount++; return; }
+    if(q.kind==='L' && a===2){ unsureCount++; return; }  // neutral: no points, no baseline
     if(q.kind==='L'){
-      if(a===0) t[q.agree]+=2;
-      else if(a===1) t[q.agree]+=1;
-      else if(a===2) unsureCount++;
+      if(a===0) t[q.agree]+=1;          // agreement is worth half of
+      else if(a===1) t[q.agree]+=0.5;   // disagreement (acquiescence)
       else if(a===3) t[q.disagree]+=1;
       else if(a===4) t[q.disagree]+=2;
     } else if(typeof a === 'object'){
@@ -884,25 +932,29 @@ function computeTotals(){
     } else {
       addPts(t, q.opts[a], 1);
     }
+    const c = chanceProfile(q);
+    for(const k in base) base[k] += c.E[k];
   });
-  return {t, unsureCount};
+  return {t, base, unsureCount};
 }
 
 function showResults(){
   document.getElementById('gilt-fill').style.width = '100%';
-  const {t, unsureCount} = computeTotals();
+  const {t, base, unsureCount} = computeTotals();
   const sum = t.O+t.T+t.F+t.P;
   const keys = ['O','T','F','P'];
 
-  // Judge each type against what was available to it rather than against the
-  // raw total, so a heavily represented type cannot win on volume alone.
+  // Judge each type by its points ABOVE CHANCE, as a share of the headroom
+  // it had. Random or diffuse answering nets ~zero for everyone, so no type
+  // can win on volume, question mix, or agreeable clicking.
   const exposure = computeExposure();
+  const lean = k => exposure[k] ? (t[k]-base[k])/exposure[k] : 0;
   const share = {};
-  keys.forEach(k=> share[k] = exposure[k] ? t[k]/exposure[k] : 0);
+  keys.forEach(k=> share[k] = Math.max(0, lean(k)));  // clamp for display only
   const shareSum = keys.reduce((acc,k)=> acc + share[k], 0);
 
   const pct = toPercent(keys, share, shareSum);
-  const sorted = keys.slice().sort((a,b)=> share[b]-share[a]);
+  const sorted = keys.slice().sort((a,b)=> lean(b)-lean(a));  // unclamped order
   lastResult = {pct, sorted, sum, unsureCount};   // kept for the share card
 
   drawDonut(pct, sorted, sum);
@@ -1145,6 +1197,7 @@ function downloadBlob(blob){
 
 function retake(){
   answers = new Array(Q.length).fill(null);
+  optOrder = [];
   idx = 0;
   document.getElementById('gilt-fill').style.width = '0%';
   show('scr-intro');

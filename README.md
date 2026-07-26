@@ -65,6 +65,18 @@ All 50 questions are in the `const Q = [` array. Each question is one object:
 - For `'MC'` / `'RANK'`: `opts` is an array of `{y: 'O'|'T'|'F'|'P', t: 'answer text'}`
   - An option can use `pts` instead of `y` for a split score, e.g. `{pts:{O:1.5,P:0.5}, t:'...'}`
 
+Scoring is **chance-corrected**: each answer earns its points minus what a
+random clicker would earn in expectation (`chanceProfile()`), and each type's
+percentage is its points above chance as a share of the headroom it had
+(`computeExposure()`). On agree/disagree questions, agreement is worth half
+of disagreement, because agreeing is the cheaper answer (acquiescence bias).
+Answer options are shuffled per attempt (`optOrder`) so no type benefits from
+being listed first; `answers[]` always stores original option indices.
+
+`npm run check:quiz` verifies all of this — regression checks plus seeded
+simulations (uniform, acquiescent, and partisan responders). Run it after any
+question or scoring edit.
+
 Scoring lives in `computeTotals()`. Result write-ups: `DOMINANT_SUMMARY` (one
 clear leader), `PAIR_SUMMARY` (12 ordered two-way results — `'OT'` means
 Orthodox leading with Traditional second, distinct from `'TO'`),
