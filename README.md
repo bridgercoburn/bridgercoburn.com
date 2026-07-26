@@ -68,7 +68,9 @@ All 50 questions are in the `const Q = [` array. Each question is one object:
 Scoring is **chance-corrected**: each answer earns its points minus what a
 random clicker would earn in expectation (`chanceProfile()`), and each type's
 percentage is its points above chance as a share of the headroom it had
-(`computeExposure()`). On agree/disagree questions, agreement is worth half
+(`computeExposure()`). For display, those leans are lifted by a common floor
+(`LEAN_SHIFT`) so all four types keep a visible slice — ordering and the
+winner always come from the raw leans. On agree/disagree questions, agreement is worth half
 of disagreement, because agreeing is the cheaper answer (acquiescence bias).
 Answer options are shuffled per attempt (`optOrder`) so no type benefits from
 being listed first; `answers[]` always stores original option indices.

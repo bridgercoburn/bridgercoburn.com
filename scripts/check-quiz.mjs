@@ -97,16 +97,28 @@ function lopsided(target) {
   });
 }
 
+/** Display floor — mirrors LEAN_SHIFT in the page. */
+const LEAN_SHIFT = (() => {
+  const B = { O: 0, T: 0, F: 0, P: 0 };
+  M.Q.forEach((q) => {
+    const c = M.chanceProfile(q);
+    for (const k of KEYS) B[k] += c.E[k];
+  });
+  const H = M.computeExposure();
+  return Math.max(...KEYS.map((k) => (H[k] ? B[k] / H[k] : 0)));
+})();
+
 /** Mirrors the chance-corrected scoring path in showResults(). */
 function score(sheet) {
   M.setAnswers(sheet);
   const { t, base } = M.computeTotals();
+  const sum = KEYS.reduce((a, k) => a + t[k], 0);
   const exposure = M.computeExposure();
   const lean = {};
   const share = {};
   KEYS.forEach((k) => {
     lean[k] = exposure[k] ? (t[k] - base[k]) / exposure[k] : 0;
-    share[k] = Math.max(0, lean[k]);
+    share[k] = sum === 0 ? 0 : lean[k] + LEAN_SHIFT;
   });
   const shareSum = KEYS.reduce((a, k) => a + share[k], 0);
   return {
@@ -300,6 +312,49 @@ console.log("\n8. Noisy partisans x5k each (gate: recoverability spread ≤ 5pts
   const spread =
     Math.max(...KEYS.map((k) => rate[k])) - Math.min(...KEYS.map((k) => rate[k]));
   check(`recoverability spread is ${spread.toFixed(1)}pts (≤ 5)`, spread <= 5);
+}
+
+console.log("\n9. Display: every profile shows four visible slices");
+{
+  // Regression for the 100/0/0/0 bug: sub-chance leans must not clamp the
+  // bottom types to 0% — the display floor keeps all four slices visible.
+  const rand = mulberry32(17761215);
+  const leaner = (target, p) =>
+    M.Q.map((q) => {
+      const own = rand() < p;
+      if (q.kind === "L") {
+        if (own && q.agree === target) return 0;
+        if (own && q.disagree === target) return 4;
+        return [0, 1, 3, 4][(rand() * 4) | 0];
+      }
+      const mine = q.opts.findIndex((o) =>
+        o.pts ? o.pts[target] : o.y === target
+      );
+      if (q.kind === "RANK") {
+        const a = (rand() * q.opts.length) | 0;
+        let b = (rand() * (q.opts.length - 1)) | 0;
+        if (b >= a) b++;
+        return { first: own && mine >= 0 ? mine : a, second: b === mine ? a : b };
+      }
+      return own && mine >= 0 ? mine : (rand() * q.opts.length) | 0;
+    });
+  let minPct = 100;
+  const samples = [];
+  for (const target of KEYS) {
+    for (const p of [0.45, 0.6, 0.8]) {
+      const r = score(leaner(target, p));
+      minPct = Math.min(minPct, ...KEYS.map((k) => r.pct[k]));
+      if (target === "O") samples.push(`p=${p}: ${JSON.stringify(r.pct)}`);
+    }
+  }
+  samples.forEach((s) => console.log("  O-leaner " + s));
+  check(`smallest slice across 12 leaner profiles is ${minPct}% (must be > 0)`, minPct > 0);
+  // Pure partisans may legitimately push others very low, but never negative
+  const pure = score(lopsided("T"));
+  check(
+    `pure partisan still sums to 100 (got ${KEYS.reduce((a, k) => a + pure.pct[k], 0)})`,
+    KEYS.reduce((a, k) => a + pure.pct[k], 0) === 100
+  );
 }
 
 console.log(

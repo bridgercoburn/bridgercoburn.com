@@ -893,6 +893,20 @@ function computeExposure(){
   return e;
 }
 
+// Rescales leans to a common non-negative floor for DISPLAY only. The floor
+// is the worst lean any type could theoretically post (every question
+// answered, zero points earned), so displayed shares are never negative,
+// the order always matches the raw leans, and all four types get a visible
+// slice instead of clamping to 0%.
+const LEAN_SHIFT = (function(){
+  const B = {O:0,T:0,F:0,P:0};
+  Q.forEach(q=>{ const c = chanceProfile(q); for(const k in B) B[k] += c.E[k]; });
+  const H = computeExposure();
+  let m = 0;
+  for(const k in B) m = Math.max(m, H[k] ? B[k]/H[k] : 0);
+  return m;
+})();
+
 // Largest-remainder rounding, so the four figures always total exactly 100
 // and the donut has no seam.
 function toPercent(keys, share, shareSum){
@@ -949,8 +963,10 @@ function showResults(){
   // can win on volume, question mix, or agreeable clicking.
   const exposure = computeExposure();
   const lean = k => exposure[k] ? (t[k]-base[k])/exposure[k] : 0;
+  // Display shares are the leans lifted by a common floor — same order,
+  // never negative, and every type keeps a visible slice.
   const share = {};
-  keys.forEach(k=> share[k] = Math.max(0, lean(k)));  // clamp for display only
+  keys.forEach(k=> share[k] = sum===0 ? 0 : lean(k) + LEAN_SHIFT);
   const shareSum = keys.reduce((acc,k)=> acc + share[k], 0);
 
   const pct = toPercent(keys, share, shareSum);
