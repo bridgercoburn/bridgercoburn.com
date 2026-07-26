@@ -41,6 +41,21 @@ body {
   line-height: 1.6;
 }
 
+/* Gentle drift on the hero's scroll chevron. The reduced-motion rule
+   below disables it along with everything else. */
+@keyframes hint-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(7px);
+  }
+}
+.scroll-hint {
+  animation: hint-drift 2.2s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
