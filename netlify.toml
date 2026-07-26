@@ -1,0 +1,22 @@
+# Netlify publish settings.
+#
+# Next.js is configured for static export (`output: "export"` in next.config.ts),
+# so the build writes a plain HTML/CSS/JS site to `out/` and Netlify serves it
+# directly. There is no server runtime.
+#
+# URL map:
+#   /           -> src/app/page.tsx
+#   /lds-quiz/  -> public/lds-quiz/index.html (copied to out/ verbatim)
+
+[build]
+  command = "npm run build"
+  publish = "out"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# bridgercoburn.com
 
-## Getting Started
+Next.js site hosted on Netlify. Deploys automatically on every push to `main`.
 
-First, run the development server:
+Next.js is set to **static export** (`output: "export"` in `next.config.ts`), so
+`npm run build` writes a plain HTML/CSS/JS site to `out/` and Netlify serves
+those files directly. No server runtime, nothing to keep awake.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Structure
+
+```
+.
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx      # shared shell (gilt edge, fonts, metadata)
+│   │   ├── page.tsx        # homepage (bridgercoburn.com)
+│   │   └── globals.css     # color palette and base type
+│   └── lib/
+│       └── posts.ts        # the post list the homepage renders
+├── public/
+│   └── lds-quiz/
+│       └── index.html      # the quiz (bridgercoburn.com/lds-quiz)
+└── netlify.toml            # build command and publish directory
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Anything in `public/` is copied to the site verbatim. That is why the quiz is
+still one self-contained HTML file — it has no external dependencies and no
+build step, so there was no reason to rewrite it as React.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Working on the site
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install     # once
+npm run dev     # http://localhost:3000
+npm run build   # writes out/ — same build Netlify runs
+```
 
-## Learn More
+Run `npm run build` before pushing. If it fails locally it will fail on Netlify,
+and a failed build means the live site keeps serving the previous version.
 
-To learn more about Next.js, take a look at the following resources:
+## Adding a post
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Add an entry to the `posts` array in `src/lib/posts.ts`. Newest goes first.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+For a **plain HTML post**, create `public/<slug>/index.html` and point `href` at
+`/<slug>/`.
 
-## Deploy on Vercel
+For a **React post**, create `src/app/<slug>/page.tsx` and point `href` at the
+same path. `trailingSlash: true` is set, so both kinds of URL end in a slash and
+behave identically.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Editing the quiz
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Everything lives in `public/lds-quiz/index.html`: markup, styles, questions,
+scoring.
+
+All 50 questions are in the `const Q = [` array. Each question is one object:
+
+- `sec` — section index (0–6), maps to the `SECTIONS` array
+- `kind` — `'L'` (agree/disagree), `'MC'` (multiple choice), `'RANK'` (pick 1st and 2nd)
+- `title` — the question or quote
+- `ctx` — plain-language background shown under "Context"
+- `src` — sources line, shown in smaller type below the context
+- For `'L'`: `agree` and `disagree` name the type earning points at each pole
+- For `'MC'` / `'RANK'`: `opts` is an array of `{y: 'O'|'T'|'F'|'P', t: 'answer text'}`
+  - An option can use `pts` instead of `y` for a split score, e.g. `{pts:{O:1.5,P:0.5}, t:'...'}`
+
+Scoring lives in `computeTotals()`. Result write-ups live in `TYPE_SUMMARY`,
+`PAIR_SUMMARY`, and `MIXED_SUMMARY`.
+
+The quiz carries its own copy of the color palette. It does not read
+`globals.css`, so a color change in one place needs the same change in the
+other.

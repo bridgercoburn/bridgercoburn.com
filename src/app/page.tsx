@@ -1,65 +1,56 @@
-import Image from "next/image";
+import { formatDate, posts } from "@/lib/posts";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
+    <main className="mx-auto w-full max-w-[600px] px-6 pt-14 pb-18">
+      <p className="text-center font-sans text-[11px] tracking-[0.22em] uppercase text-pencil">
+        Layton, Utah
+      </p>
+
+      <DoubleRule />
+
+      <h1 className="mt-3.5 mb-2.5 text-center text-[clamp(32px,7vw,46px)] leading-[1.15] font-semibold tracking-[-0.01em]">
+        Bridger Coburn
+      </h1>
+
+      <p className="mx-auto mb-10 max-w-[440px] text-center text-[17.5px] italic text-ink-soft">
+        Replace this line with a sentence about who you are and what you do.
+      </p>
+
+      <ul className="mx-auto max-w-[520px] list-none">
+        {posts.map((post) => (
+          <li key={post.href}>
             <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              href={post.href}
+              className="mb-3.5 block rounded-r-[3px] border border-hairline border-l-2 border-l-gilt bg-paper-card px-[22px] py-5 text-inherit no-underline transition-[background-color,border-color,transform] duration-150 hover:-translate-y-px hover:border-pencil hover:border-l-leather hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-gilt"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+              <h2 className="mb-1.5 text-xl font-semibold">{post.title}</h2>
+              <p className="text-[15px] leading-[1.55] text-ink-soft">
+                {post.blurb}
+              </p>
+              <span className="mt-[11px] inline-block font-sans text-[11.5px] font-bold tracking-[0.16em] uppercase text-leather">
+                {post.cta ?? "Read"} &rarr;
+              </span>
+              <span className="sr-only">Published {formatDate(post.date)}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      <footer className="mt-11 text-center font-sans text-xs tracking-[0.04em] text-pencil">
+        &copy; {new Date().getFullYear()} Bridger Coburn
+      </footer>
+    </main>
+  );
+}
+
+/** The thin double hairline under the eyebrow. */
+function DoubleRule() {
+  return (
+    <div
+      aria-hidden
+      className="mx-auto mt-3.5 h-[5px] w-[120px] border-t border-hairline
+                 [background:linear-gradient(to_bottom,transparent_3px,var(--hairline)_3px,var(--hairline)_4px,transparent_4px)]"
+    />
   );
 }

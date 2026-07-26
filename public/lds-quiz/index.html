@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Kind of Latter-day Saint Are You?</title>
+<style>
+  :root{
+    --paper:#F6F2E7;
+    --paper-deep:#EFE9D8;
+    --ink:#26211A;
+    --ink-soft:#4A4336;
+    --pencil:#877E6B;
+    --leather:#5E2226;
+    --leather-deep:#471A1D;
+    --gilt:#B98A2F;
+    --hairline:#D8D0BC;
+    --c-orthodox:#35507A;
+    --c-traditional:#6B2A2E;
+    --c-fundamental:#41603C;
+    --c-progressive:#B08428;
+    --serif:"Palatino Linotype",Palatino,"Book Antiqua","Iowan Old Style",Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--serif);line-height:1.55;min-height:100vh}
+  .gilt-edge{position:fixed;top:0;left:0;right:0;height:5px;background:var(--paper-deep);z-index:10}
+  .gilt-edge span{display:block;height:100%;width:0%;background:linear-gradient(90deg,#a67c22,#d4a94a 55%,#a67c22);transition:width .35s ease}
+  .wrap{max-width:660px;margin:0 auto;padding:44px 22px 80px}
+  .screen{display:none;animation:fadein .3s ease}
+  .screen.active{display:block}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+  .eyebrow{font-family:var(--sans);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--pencil);text-align:center}
+  .rule2{border:0;border-top:1px solid var(--hairline);position:relative;margin:14px auto;width:120px}
+  .rule2::after{content:"";position:absolute;left:0;right:0;top:3px;border-top:1px solid var(--hairline)}
+  h1.masthead{font-size:clamp(30px,6vw,42px);font-weight:600;text-align:center;line-height:1.15;letter-spacing:-.01em;margin:14px 0 6px}
+  .subtitle{text-align:center;color:var(--ink-soft);font-size:17px;max-width:480px;margin:10px auto 30px;font-style:italic}
+  .types-inline{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:12px 30px;margin:0 auto 12px;padding:18px 0;border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);max-width:520px}
+  .types-inline li{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16.5px}
+  .type-dot{width:10px;height:10px;border-radius:50%;flex:none}
+  .fine{font-family:var(--sans);font-size:12.5px;color:var(--pencil);text-align:center;max-width:460px;margin:20px auto 30px;line-height:1.5}
+  .disclaimer{max-width:520px;margin:22px auto 0;border:1px solid var(--hairline);border-left:2px solid var(--gilt);background:#FBF8F0;padding:14px 18px;font-size:14px;color:var(--ink-soft);line-height:1.6;border-radius:0 3px 3px 0;text-align:left}
+  .disclaimer h3{font-family:var(--sans);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gilt);font-weight:700;margin-bottom:7px}
+  .disclaimer p+p{margin-top:8px}
+
+  .btn{display:inline-block;font-family:var(--sans);font-size:15px;font-weight:600;letter-spacing:.04em;background:var(--leather);color:var(--paper);border:none;border-radius:3px;padding:14px 38px;cursor:pointer}
+  .btn:hover{background:var(--leather-deep)}
+  .btn:focus-visible,button:focus-visible{outline:2px solid var(--gilt);outline-offset:3px}
+  .btn-row{text-align:center}
+  .btn-ghost{background:none;border:1px solid var(--hairline);color:var(--ink-soft)}
+  .btn-ghost:hover{background:var(--paper-deep)}
+
+  .q-eyebrow{font-family:var(--sans);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--pencil);display:flex;justify-content:space-between;margin-bottom:22px}
+  .verse{color:var(--gilt);font-weight:700;font-size:15px;font-family:var(--serif);display:inline-block;margin-right:8px}
+  .q-title{font-size:clamp(19px,3.4vw,23px);font-weight:600;line-height:1.4;margin-bottom:8px}
+  .ctx-toggle{font-family:var(--sans);font-size:12.5px;color:var(--gilt);background:none;border:none;cursor:pointer;padding:4px 0;letter-spacing:.03em;font-weight:600}
+  .ctx-toggle::before{content:"\25B8 "}
+  .ctx-toggle.open::before{content:"\25BE "}
+  .ctx-body{display:none;border-left:2px solid var(--gilt);background:var(--paper-deep);padding:12px 16px;margin:8px 0 4px;font-size:14.5px;color:var(--ink-soft);line-height:1.55;border-radius:0 3px 3px 0}
+  .ctx-body.open{display:block}
+  .ctx-src{display:block;margin-top:8px;font-family:var(--sans);font-size:12px;color:var(--pencil)}
+  .opts{margin-top:20px;display:flex;flex-direction:column;gap:10px}
+  .opt{text-align:left;font-family:var(--serif);font-size:15.5px;line-height:1.5;color:var(--ink);background:#FBF8F0;border:1px solid var(--hairline);border-radius:4px;padding:13px 16px;cursor:pointer;transition:border-color .12s,background .12s;width:100%}
+  .opt:hover{border-color:var(--pencil);background:#fff}
+  .opt.selected{border-color:var(--leather);background:#fff;box-shadow:inset 3px 0 0 var(--leather)}
+  .opt.unsure{color:var(--pencil);font-style:italic;margin-top:6px}
+  .opt .rank-badge{display:inline-block;font-family:var(--sans);font-style:normal;font-size:11px;font-weight:700;background:var(--leather);color:var(--paper);border-radius:10px;padding:1px 9px;margin-right:8px;letter-spacing:.05em;vertical-align:1px}
+  .dual-btn{font-family:var(--sans);font-size:12.5px;color:var(--pencil);background:none;border:none;cursor:pointer;padding:8px 0 0;text-decoration:underline;text-underline-offset:3px;align-self:flex-start}
+  .dual-btn:hover{color:var(--ink)}
+  .rank-hint{font-family:var(--sans);font-size:13px;color:var(--pencil);margin-top:14px}
+  .nav-row{margin-top:26px;display:flex;justify-content:space-between;align-items:center}
+  .back-link{font-family:var(--sans);font-size:13.5px;color:var(--pencil);background:none;border:none;cursor:pointer;padding:6px 2px}
+  .back-link:hover{color:var(--ink)}
+  .count-note{font-family:var(--sans);font-size:12.5px;color:var(--pencil)}
+
+  .results-head{text-align:center;margin-bottom:8px}
+  .donut-wrap{display:flex;justify-content:center;margin:26px 0 10px}
+  .donut-center-label{font-family:var(--sans);font-size:11px;letter-spacing:.16em;text-transform:uppercase;fill:var(--pencil)}
+  .donut-center-type{font-family:var(--serif);font-size:21px;font-weight:600;fill:var(--ink)}
+  .legend{max-width:400px;margin:6px auto 26px}
+  .legend-row{display:flex;align-items:center;gap:12px;padding:9px 2px;border-bottom:1px solid var(--hairline);font-size:15.5px}
+  .legend-row:first-child{border-top:1px solid var(--hairline)}
+  .legend-swatch{width:12px;height:12px;border-radius:2px;flex:none}
+  .legend-name{flex:1}
+  .legend-pct{font-weight:700;font-variant-numeric:tabular-nums}
+  .summary-card{background:#FBF8F0;border:1px solid var(--hairline);border-radius:4px;padding:20px 22px;margin:0 auto 14px;max-width:560px;font-size:15.5px;line-height:1.65}
+  .summary-card h3{font-family:var(--sans);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gilt);font-weight:700;margin-bottom:8px}
+  .unsure-note{font-family:var(--sans);font-size:13px;color:var(--pencil);text-align:center;max-width:480px;margin:4px auto 26px;line-height:1.55}
+</style>
+</head>
+<body>
+<div class="gilt-edge"><span id="gilt-fill"></span></div>
+<div class="wrap">
+
+  <!-- INTRO -->
+  <section class="screen active" id="scr-intro">
+    <p class="eyebrow">A Questionnaire in Fifty Parts</p>
+    <hr class="rule2">
+    <h1 class="masthead">What Kind of<br>Latter-day Saint Are You?</h1>
+    <p class="subtitle">Where do your loyalties actually sit when the sources disagree?</p>
+    <ul class="types-inline">
+      <li><span class="type-dot" style="background:var(--c-orthodox)"></span>Orthodox</li>
+      <li><span class="type-dot" style="background:var(--c-traditional)"></span>Traditional</li>
+      <li><span class="type-dot" style="background:var(--c-fundamental)"></span>Fundamental</li>
+      <li><span class="type-dot" style="background:var(--c-progressive)"></span>Progressive</li>
+    </ul>
+    <div class="disclaimer">
+      <h3>A Quick Disclaimer</h3>
+      <p>These four categories are not objective facts, and they are not built on any formal science or study. They are simply labels I have used for a few years to make sense of my conversations with a wide range of Latter-day Saints. They are imperfect, and they carry no endorsement from the Church or its leadership.</p>
+      <p>This quiz is my attempt at a useful and entertaining way to help people see where they might land. Like every quiz of its kind, it is imperfect. Some questions will not give voice to your exact perspective or capture nuance that matters to you. Choose the closest fit, and hold your results loosely.</p>
+    </div>
+    <p class="fine">There are no right answers. If a question is new to you, "not sure" is a perfectly good answer, and most questions include a Context note with background and sources. What each category means comes with your results. About 15 minutes.</p>
+    <div class="btn-row"><button class="btn" onclick="startQuiz()">Begin</button></div>
+  </section>
+
+  <!-- QUESTION -->
+  <section class="screen" id="scr-question">
+    <div class="q-eyebrow"><span id="q-section"></span><span id="q-progress"></span></div>
+    <h2 class="q-title"><span class="verse" id="q-num"></span><span id="q-text"></span></h2>
+    <button class="ctx-toggle" id="q-ctx-toggle" onclick="toggleCtx()">Context</button>
+    <div class="ctx-body" id="q-ctx-body"></div>
+    <div class="opts" id="q-opts"></div>
+    <p class="rank-hint" id="q-rank-hint" style="display:none">Tap your first pick, then your second. Tap your first pick again to start over.</p>
+    <div class="nav-row">
+      <button class="back-link" id="q-back" onclick="goBack()">&#8592; Back</button>
+      <span class="count-note" id="q-count-note"></span>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="screen" id="scr-results">
+    <div class="results-head">
+      <p class="eyebrow">Your Profile</p>
+      <hr class="rule2">
+    </div>
+    <div class="donut-wrap" id="donut"></div>
+    <div class="legend" id="legend"></div>
+    <div id="summaries"></div>
+    <p class="unsure-note" id="unsure-note"></p>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn btn-ghost" onclick="retake()">Retake the quiz</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const LIKERT = ['Strongly agree','Agree','Neutral / not sure','Disagree','Strongly disagree'];
+const UNSURE = "Not sure. I haven't thought about this enough.";
+const TYPES = {
+  O:{name:'Orthodox',hex:'#35507A'},
+  T:{name:'Traditional',hex:'#6B2A2E'},
+  F:{name:'Fundamental',hex:'#41603C'},
+  P:{name:'Progressive',hex:'#B08428'}
+};
+const SECTIONS = [
+  'Prophets and Authority','God and Doctrine','Scripture and Translation',
+  'Science and Reason','Church History','Money and Practice','Modern Questions'
+];
+const ROMAN = ['I','II','III','IV','V','VI','VII'];
+
+// kind: 'L' Likert | 'MC' multiple choice (dual-select allowed) | 'RANK' pick first and second
+// ctx: plain-language background. src: where to read more.
+// opts: y = type earning 2 points, OR pts = custom point split.
+const Q = [
+
+// ---------- Section I: Prophets and Authority ----------
+{sec:0, kind:'L', agree:'O', disagree:'F',
+ title:'"The living prophet is more vital to us than the standard works."',
+ ctx:'Ezra Taft Benson, "Fourteen Fundamentals in Following the Prophet," BYU, 1980. Plain terms: what the prophet says today outranks what is written in the scriptures. The talk was quoted twice in the October 2010 general conference.',
+ src:'Sources: speeches.byu.edu; Oct. 2010 general conference reports.'},
+
+{sec:0, kind:'L', agree:'O', disagree:'P',
+ title:'"The Lord will never permit me or any other man who stands as President of this Church to lead you astray."',
+ ctx:'Wilford Woodruff, 1890, defending the Manifesto that ended polygamy. The statement is printed in the scriptures in the excerpts after Official Declaration 1.',
+ src:'Source: Doctrine and Covenants, Official Declaration 1.'},
+
+{sec:0, kind:'L', agree:'T', disagree:'P',
+ title:'"I have never yet preached a sermon and sent it out to the children of men, that they may not call it Scripture."',
+ ctx:'Brigham Young, 1870. He is saying his sermons carry the weight of scripture.',
+ src:'Sources: Journal of Discourses 13:95; compare question 7.'},
+
+{sec:0, kind:'L', agree:'P', disagree:'O',
+ title:'"A prophet can teach things that are not true while serving as the prophet."',
+ ctx:'Not personal mistakes or private opinions. The question is whether a sitting prophet can teach something false over the pulpit. Test cases people point to: Brigham Young\'s Adam-God teaching, and priesthood-ban explanations the church has since disavowed.',
+ src:'Sources: Gospel Topics essay "Race and the Priesthood"; mormonr.org.'},
+
+{sec:0, kind:'L', agree:'T', disagree:'P',
+ title:'"The church is justified in leaving out true but troubling parts of its history in order to protect faith."',
+ ctx:'Boyd K. Packer taught in 1981 that "some things that are true are not very useful." Church Historian Steven E. Snow said in 2013 that openness about history "solves a whole lot more problems than it creates."',
+ src:'Sources: Packer, "The Mantle Is Far, Far Greater Than the Intellect" (1981); Snow interview, Religious Educator (2013).'},
+
+{sec:0, kind:'MC',
+ title:'A general conference talk goes against something you feel God told you personally. What do you do?',
+ ctx:'The scriptures pull both ways. D&C 21 says to receive the prophet\'s word "as if from mine own mouth." Joseph also taught that even "the least Saint may know all things" as fast as they can bear them.',
+ src:'Sources: D&C 21:4-5; History of the Church 3:380.',
+ opts:[
+  {y:'O', t:'Trust the prophet and re-check my own impression. God will not let the prophet lead the church astray.'},
+  {y:'T', t:'Compare both to the scriptures and to what past prophets taught. Whichever contradicts those is the opinion.'},
+  {y:'F', t:'Joseph taught that anyone can receive revelation. I follow what God told me, while staying humble.'},
+  {y:'P', t:'I take the counsel seriously, but in the end my own conscience and judgment decide.'}
+ ]},
+
+{sec:0, kind:'MC',
+ title:'At what point can we consider the words of church leaders to be scripture?',
+ ctx:'D&C 68:4 says that when leaders speak "as moved upon by the Holy Ghost," their words are scripture. J. Reuben Clark of the First Presidency taught in 1954 that this is the only time, and admitted that even the speaker may not always know when it has happened.',
+ src:'Sources: D&C 68:4; J. Reuben Clark, "When Are Church Leaders\' Words Entitled to the Claim of Scripture?" (1954).',
+ opts:[
+  {y:'O', t:'When the church presents it that way. If the First Presidency and the Twelve say it together, it is binding.'},
+  {y:'T', t:'When it is consistent. If it matches the scriptures and what prophets have always taught, it is trustworthy as scripture.'},
+  {y:'F', t:'When the Spirit confirms it to the hearer, the same Spirit that moved the speaker.'},
+  {y:'P', t:'There is no reliable test, which is a good reason to hold prophetic claims loosely.'}
+ ]},
+
+{sec:0, kind:'MC',
+ title:'If the current prophet officially reversed a teaching you believed was eternal truth, what would you most likely conclude?',
+ ctx:'This has happened. Examples members point to: the end of plural marriage (1890) and the end of the priesthood ban (1978), both once described as unchangeable.',
+ src:'Sources: Official Declarations 1 and 2; related Gospel Topics essays.',
+ opts:[
+  {y:'O', t:'It was never an eternal truth, or God had more to reveal. That is what ongoing revelation means.'},
+  {y:'T', t:'Something is wrong. Eternal truth does not change. I would quietly hold to the original teaching.'},
+  {y:'F', t:'I would compare it to what God revealed through Joseph Smith. If it contradicts that, it is a human error.'},
+  {y:'P', t:'It would confirm that church teachings change over time, like everything else people build.'}
+ ]},
+
+{sec:0, kind:'RANK',
+ title:'When these four disagree with each other, which one wins for you? And which comes second?',
+ ctx:'Your first pick earns more weight than your second. If you truly cannot rank them, choose "not sure."',
+ opts:[
+  {y:'O', t:'The current prophet and apostles'},
+  {y:'T', t:'The scriptures'},
+  {y:'F', t:"Joseph Smith's teachings"},
+  {y:'P', t:'Evidence and scholarship'}
+ ]},
+
+{sec:0, kind:'MC',
+ title:'A hard gospel question comes up. Where do you look first?',
+ opts:[
+  {y:'O', t:'Recent general conference talks and official church websites.'},
+  {y:'T', t:'Classic doctrinal books like Mormon Doctrine, Doctrines of Salvation, and Jesus the Christ.'},
+  {y:'F', t:"Joseph Smith's own words: the Joseph Smith Papers and his recorded sermons."},
+  {y:'P', t:'Historians and scholars: academic books, journals, and research.'}
+ ]},
+
+// ---------- Section II: God and Doctrine ----------
+{sec:1, kind:'MC',
+ title:'Brigham Young taught that Adam "is our Father and our God, and the only God with whom we have to do." What do you make of the Adam-God teaching?',
+ ctx:'Brigham said he learned this from Joseph Smith and taught it as revelation. It appeared in church magazines, hymns, sermons, and the St. George temple lecture. President Kimball publicly denounced it in the October 1976 general conference.',
+ src:'Sources: mormonr.org/qnas/0JPssK/adam_god_theory; Journal of Discourses 1:50 (1852); Spencer W. Kimball, Oct. 1976 conference.',
+ opts:[
+  {y:'O', t:'President Kimball denounced it. Whatever Brigham meant, it is not what the church teaches, and that settles it.'},
+  {y:'T', t:'It was a mistake, or his words were recorded wrong. Scripture is clear that Adam is Michael, not God the Father.'},
+  {y:'F', t:'Brigham taught it plainly and claimed revelation for it. I take it seriously even if I do not fully understand it.'},
+  {y:'P', t:'He clearly taught it, and the church later dropped it. That shows how church teachings actually change over time.'}
+ ]},
+
+{sec:1, kind:'MC',
+ title:'Joseph Smith taught that "God himself was once as we are now, and is an exalted man." Does God the Father have a Father of His own?',
+ ctx:'From the King Follett discourse, Joseph\'s funeral sermon of April 1844, two months before his death. If God was once a man, it suggests God also had a God, and so on backward. Joseph went further that June in the Sermon in the Grove.',
+ src:'Sources: josephsmithpapers.org (King Follett discourse accounts); Gospel Topics essay "Becoming Like God."',
+ opts:[
+  {y:'F', t:'Yes. Joseph likely believed and taught a never-ending or very long chain of Gods, and I believe him.'},
+  {y:'T', t:'God was once a man. That much is true. Guessing beyond that is difficult.'},
+  {y:'O', t:'President Hinckley said, "I don\'t know that we teach it." I stay with what the church emphasizes today.'},
+  {y:'P', t:"It was Joseph's evolving belief late in his life, not necessarily true theology."}
+ ]},
+
+{sec:1, kind:'MC',
+ title:'Heavenly Mother:',
+ ctx:'The church affirms a Mother in Heaven but teaches that we pray only to the Father. A BYU Studies survey gathered over 600 historical teachings about Her from leaders and members.',
+ src:'Sources: 1909 First Presidency statement "The Origin of Man"; Gospel Topics essay "Mother in Heaven"; Paulsen and Pulido, "A Mother There" (BYU Studies, 2011).',
+ opts:[
+  {y:'O', t:'A cherished truth. I follow current counsel: we pray to the Father, not to Her.'},
+  {y:'T', t:'Real and true, but sacred. Pushing for more about Her is a warning sign.'},
+  {y:'F', t:'The early Saints, like Eliza R. Snow, spoke of Her openly. We have grown too timid about a Restoration truth.'},
+  {y:'P', t:'This truth deserves real development, and questions about praying to Her deserve better answers than silence.'}
+ ]},
+
+{sec:1, kind:'L', agree:'T', disagree:'P',
+ title:'"There are those who say that revealed religion and organic evolution can be harmonized. This is both false and devilish."',
+ ctx:'Bruce R. McConkie, "The Seven Deadly Heresies," BYU, 1980. He is saying you cannot believe in both evolution and the restored gospel. Compare question 27 for the fight inside the leadership over this.',
+ src:'Sources: speeches.byu.edu; the BYU evolution packet of official First Presidency statements.'},
+
+{sec:1, kind:'MC',
+ title:'Temple ordinances have changed many times over the years:',
+ ctx:'The endowment has been revised repeatedly: the penalties were removed in 1990, and 2019 brought major changes to wording and covenants. News reporting connected the 1990 revisions to a large survey of members.',
+ src:'Sources: mormonr.org (temple); FAIR, "Endowment development"; contemporary news coverage of the 1990 and 2019 changes.',
+ opts:[
+  {y:'O', t:'Living prophets refine the ordinances by revelation. The covenants are what matter.'},
+  {y:'T', t:'It makes me uneasy. Things once sacred enough to include should not be removed to fit modern tastes.'},
+  {y:'F', t:'I care most about the endowment as Joseph originally established it in Nauvoo.'},
+  {y:'P', t:'Rituals adapt over time. Changes that follow member surveys show a human institution at work.'}
+ ]},
+
+{sec:1, kind:'MC',
+ title:'Plural marriage:',
+ ctx:'Taught privately by Joseph in Nauvoo and practiced openly in Utah from 1852 to 1890. It still shapes sealing rules today: a widowed man can be sealed to more than one wife, but a widowed woman cannot be sealed to more than one husband.',
+ src:'Sources: Gospel Topics essays "Plural Marriage in Kirtland and Nauvoo" and "Plural Marriage and Families in Early Utah"; D&C 132.',
+ opts:[
+  {y:'O', t:'God commanded it for a time and ended it through His prophet. Both the start and the stop were His will.'},
+  {y:'T', t:'An eternal principle that is paused on earth. D&C 132 is still scripture, and eternal sealings still reflect it.'},
+  {y:'F', t:'Revealed through Joseph as part of the Restoration. The 1890 Manifesto looks more like yielding to the government than revelation.'},
+  {y:'P', t:'A human religious experiment of the 1800s that caused real harm, especially to women.'}
+ ]},
+
+{sec:1, kind:'MC',
+ title:'Brigham Young taught "blood atonement," the idea that some sins are so serious that Christ\'s atonement does not cover them, and the sinner\'s own blood must be shed. Your reaction?',
+ ctx:'Examples: Brigham taught there are sins for which people "would beg" that their own "blood might be spilt" as an offering (JD 4:53), and that the penalty for a white member mixing "his blood with the seed of Cain" was "death on the spot" (JD 10:110). The church has disavowed these teachings.',
+ src:'Sources: Journal of Discourses 4:53-54 and 10:110; Gospel Topics essay "Peace and Violence among 19th-Century Latter-day Saints"; mormonr.org.',
+ opts:[
+  {y:'O', t:'Harsh frontier preaching the church has disavowed. It was never true, then or now.'},
+  {y:'T', t:'A true principle in theory, as Elder McConkie explained, but never an actual church practice.'},
+  {y:'F', t:'Hard sayings from a prophet to his people in a desperate time. I do not rush to explain them away.'},
+  {y:'P', t:'Violent rhetoric that shows prophets absorb the culture of their day.'}
+ ]},
+
+{sec:1, kind:'L', agree:'O', disagree:'F',
+ title:'"It is safest to believe and teach only what the church currently emphasizes."',
+ ctx:'The question underneath: are older teachings the church has gone quiet on, like the King Follett teachings, still safe to believe and teach? Compare questions 12 and 34.'},
+
+// ---------- Section III: Scripture and Translation ----------
+{sec:2, kind:'MC',
+ title:'How was the Book of Mormon translated?',
+ ctx:'Witnesses like Emma Smith and David Whitmer described Joseph placing a seer stone in a hat and dictating for hours. Church artwork has usually shown him reading directly from the plates. A church essay confirmed the stone-and-hat accounts.',
+ src:'Sources: Gospel Topics essay "Book of Mormon Translation"; josephsmithpapers.org; witness accounts of Emma Smith and David Whitmer.',
+ opts:[
+  {y:'O', t:'By the gift and power of God, including the seer stone in the hat, as the church essay describes.'},
+  {y:'T', t:'Through the Urim and Thummim, as prophets always taught. I am skeptical of the stone-in-the-hat story.'},
+  {y:'F', t:'The witnesses described the stone and the hat, and that is fine. God used the tools Joseph actually had.'},
+  {y:'P', t:'A complex process. I am open to the idea that Joseph composed or expanded the text himself.'}
+ ]},
+
+{sec:2, kind:'MC',
+ title:'Where did the Book of Mormon take place?',
+ ctx:'The church takes no official position. The main models: the whole of the Americas (hemispheric, the traditional reading), a limited region in Mesoamerica favored by many faithful scholars, and the Heartland model in the US Midwest and East, built on Joseph\'s statements about Zelph and the Hill Cumorah in New York.',
+ src:'Sources: Gospel Topics, "Book of Mormon Geography"; scripturecentral.org; FAIR; mormonr.org.',
+ opts:[
+  {y:'O', t:'The church takes no position, and I do not need one. It is a real ancient record wherever it happened.'},
+  {y:'T', t:'Across North and South America, as prophets traditionally taught.'},
+  {pts:{O:1.5,P:0.5}, t:'A limited area in Mesoamerica (Central America), where many faithful scholars see the best fit with the text.'},
+  {y:'F', t:"The Heartland: here in the United States, where Joseph's own statements point, with Cumorah in New York."},
+  {y:'P', t:'I am not convinced it describes real ancient geography at all.'}
+ ]},
+
+{sec:2, kind:'MC',
+ title:'The Book of Abraham:',
+ ctx:'Joseph produced it from Egyptian papyri purchased in 1835. Egyptologists say the surviving pieces are common funeral documents that never mention Abraham. The church essay offers possibilities such as a missing scroll, or the papyri acting as a spark ("catalyst") for revelation.',
+ src:'Sources: Gospel Topics essay "Translation and Historicity of the Book of Abraham"; Joseph Smith Papers, Revelations and Translations Vol. 4; mormonr.org.',
+ opts:[
+  {y:'O', t:'Revealed scripture. The possibilities in the church essay are enough for me.'},
+  {y:'T', t:"A real translation of Abraham's ancient writings. The surviving pieces are just not the part Joseph used."},
+  {y:'F', t:"Joseph's explanations came by revelation and stand on their own, whatever Egyptologists say."},
+  {y:'P', t:'The papyri are ordinary funeral texts. The book is best understood as scripture Joseph produced in the 1800s.'}
+ ]},
+
+{sec:2, kind:'L', agree:'O', disagree:'P',
+ title:'Russell M. Nelson, as Prophet, opened the October 2021 general conference by saying, "I can assure you that what you will hear today and tomorrow constitutes pure truth."',
+ ctx:'Russell M. Nelson, opening the October 2021 general conference. The claim is that conference teaching is pure truth. Whether members receive conference talks at that level, near the level of scripture, is the real question here.',
+ src:'Source: Russell M. Nelson, "Pure Truth, Pure Doctrine, and Pure Revelation," Oct. 2021 general conference.'},
+
+{sec:2, kind:'L', agree:'P', disagree:'T',
+ title:'"When trained historians and past church leaders disagree about what actually happened in church history, I trust the historians."',
+ ctx:'Example: past leaders taught the priesthood ban was God\'s will. Most historians trace it to Brigham Young and the racial attitudes of his era, and the church\'s own essay now leans that direction.',
+ src:'Sources: Gospel Topics essay "Race and the Priesthood"; W. Paul Reeve, "Let\'s Talk about Race and Priesthood" (Deseret Book, 2023).'},
+
+{sec:2, kind:'L', agree:'T', disagree:'P',
+ title:'"The Joseph Smith Translation of the Bible restores the Bible text back to how it was originally written."',
+ ctx:'Joseph revised thousands of Bible verses between 1830 and 1833. Scholars note that some changes read as restorations while many read as inspired commentary or clarification.',
+ src:'Sources: josephsmithpapers.org (Bible revision manuscripts); Robert J. Matthews, "A Plainer Translation"; Scripture Central.'},
+
+{sec:2, kind:'L', agree:'P', disagree:'T',
+ title:'"Modern Bible scholarship, like the evidence that the book of Isaiah had multiple authors, can faithfully shape how we read scripture."',
+ ctx:'Why it matters here: many scholars date Isaiah chapters 40-66 to after Lehi left Jerusalem, yet the Book of Mormon quotes them. Faithful scholars have proposed several responses.',
+ src:'Sources: scripturecentral.org (Isaiah authorship); BYU Studies; Maxwell Institute publications.'},
+
+{sec:2, kind:'L', agree:'F', disagree:'P',
+ title:'Joseph Smith, two months before his death, taught, "I never told you I was perfect; but there is no error in the revelations which I have taught."',
+ ctx:'From an April 1844 sermon. He admits personal flaws but claims his revelations contain no error.',
+ src:'Sources: History of the Church 6:366; josephsmithpapers.org.'},
+
+// ---------- Section IV: Science and Reason ----------
+{sec:3, kind:'L', agree:'T', disagree:'P',
+ title:'Joseph Fielding Smith, who later became President of the Church, wrote, "IF EVOLUTION IS TRUE, THE CHURCH IS FALSE."',
+ ctx:'Joseph Fielding Smith, Doctrines of Salvation 1:89, capitals in the original. Worth knowing: President David O. McKay privately wrote in 1957 that the church has no official position on evolution and that Joseph Fielding Smith\'s book on the subject was not approved by the church.',
+ src:'Sources: Doctrines of Salvation 1:89; McKay correspondence in the BYU evolution packet; mormonr.org (evolution).'},
+
+{sec:3, kind:'MC',
+ title:'How old is the earth?',
+ ctx:'Apostles have publicly disagreed on this. Joseph Fielding Smith argued for a young earth with no death before the Fall. James E. Talmage, a trained geologist, taught in the Tabernacle that life and death existed for ages before Adam.',
+ src:'Sources: James E. Talmage, "The Earth and Man" (1931); Joseph Fielding Smith, "Man: His Origin and Destiny"; BYU evolution packet.',
+ opts:[
+  {y:'O', t:'The church has no revealed position, and the answer has no effect on my covenants.'},
+  {y:'T', t:'Scripture points to a young earth, and there was no death before the Fall of Adam.'},
+  {y:'F', t:"Matter is eternal and worlds are without number. Joseph's teachings make the whole debate feel small."},
+  {y:'P', t:'About 4.5 billion years. This is settled science.'}
+ ]},
+
+{sec:3, kind:'L', agree:'T', disagree:'P',
+ title:'"Noah\'s flood literally covered the whole earth."',
+ ctx:'Older church materials taught a worldwide flood as the "baptism of the earth," and a 1998 Ensign article defended a global reading. Geologists find no evidence of a global flood.',
+ src:'Sources: Donald W. Parry, "The Flood and the Tower of Babel," Ensign, Jan. 1998; FAIR (Noah\'s flood).'},
+
+{sec:3, kind:'MC',
+ title:'When solid science conflicts with what prophets have said:',
+ ctx:'Joseph Smith: "One of the grand fundamental principles of Mormonism is to receive truth, let it come from whence it may."',
+ src:'Source: History of the Church 5:499.',
+ opts:[
+  {y:'O', t:'I stay patient and follow the prophets. Eventually all truth will fit together.'},
+  {y:'T', t:'Prophets outrank scientists on anything that touches the plan of salvation.'},
+  {y:'F', t:"Joseph said Mormonism accepts truth from any source, which could include science. I separate a prophet's revelations from his opinions."},
+  {y:'P', t:'On questions about the physical world, evidence wins.'}
+ ]},
+
+{sec:3, kind:'L', agree:'O', disagree:'T',
+ title:'"The First Presidency\'s 2021 message urging members to get vaccinated was prophetic counsel that faithful members should have followed."',
+ ctx:'On August 12, 2021, the First Presidency urged members to get vaccinated and wear masks. Some members received it as counsel from God. Others treated it as administrative opinion.',
+ src:'Source: First Presidency message, Aug. 12, 2021, churchofjesuschrist.org newsroom.'},
+
+// ---------- Section V: Church History ----------
+{sec:4, kind:'MC',
+ title:'From about 1852 to 1978, Black members could not hold the priesthood or enter the temple:',
+ ctx:'Joseph Smith ordained at least one Black man, Elijah Able, to the priesthood. The ban began under Brigham Young. The church\'s essay disavows the explanations past leaders gave for it.',
+ src:'Sources: Gospel Topics essay "Race and the Priesthood"; W. Paul Reeve\'s research on Elijah Able; Official Declaration 2.',
+ opts:[
+  {y:'O', t:"We do not know the reasons. I accept the church's disavowal of past explanations and rejoice in the 1978 revelation."},
+  {y:'T', t:'Past prophets gave doctrinal reasons for it, and I am not comfortable writing prophets off as products of their time.'},
+  {y:'F', t:'Joseph ordained Black men. The ban itself was the departure from what he restored.'},
+  {y:'P', t:'It was institutional racism, and the church should plainly say so and apologize.'}
+ ]},
+
+{sec:4, kind:'MC',
+ title:'The Gospel Topics essays, the church\'s official articles on hard subjects like polygamy, race, and translation:',
+ ctx:'A set of essays published from 2013 to 2015 on the church website, addressing polygamy, the priesthood ban, Book of Mormon translation, the First Vision accounts, and more. They were approved by the First Presidency but are unsigned.',
+ src:'Source: churchofjesuschrist.org, Gospel Topics Essays.',
+ opts:[
+  {y:'O', t:'Honest and careful. Exactly how the church should handle hard topics.'},
+  {y:'T', t:"They gave away too much to critics and shook members' faith unnecessarily."},
+  {y:'F', t:'A start, but the real fix is pointing members to the original sources themselves.'},
+  {y:'P', t:'Important but unsigned, buried on the website, and incomplete. Transparency should go much further.'}
+ ]},
+
+{sec:4, kind:'L', agree:'O', disagree:'F',
+ title:'"Where the current prophets and Joseph Smith teach differently, I side with the current prophets."',
+ ctx:'Example: Joseph taught that God was once a man like us. President Hinckley told Time magazine in 1997, "I don\'t know that we teach it."',
+ src:'Sources: King Follett discourse (josephsmithpapers.org); Time magazine interview, Aug. 1997.'},
+
+{sec:4, kind:'MC',
+ title:'In the early church, women gave healing blessings to the sick. The practice was later ended:',
+ ctx:'Relief Society sisters anointed and blessed the sick into the early 1900s. Joseph told the women in 1842 that he would "turn the key" to them.',
+ src:'Sources: Relief Society minutes, 1842 (josephsmithpapers.org); "The First Fifty Years of Relief Society" (Church Historian\'s Press); Gospel Topics essay "Joseph Smith\'s Teachings about Priesthood, Temple, and Women."',
+ opts:[
+  {y:'O', t:'It was appropriately wound down as the church clarified how priesthood works.'},
+  {y:'T', t:'It was an act of faith, not priesthood. Ending it corrected a blurry line.'},
+  {y:'F', t:'The early practice preserved something Joseph gave the sisters that we have since narrowed.'},
+  {y:'P', t:'Proof that women once held broader spiritual authority, and it could be restored.'}
+ ]},
+
+{sec:4, kind:'MC',
+ title:'The 1890 Manifesto:',
+ ctx:'The Manifesto was President Wilford Woodruff\'s 1890 declaration officially ending plural marriage, issued while the federal government was seizing church property and jailing polygamists. Church-approved plural marriages quietly continued until about 1904, when the Second Manifesto ended them during the Reed Smoot Senate hearings.',
+ src:'Sources: Official Declaration 1; Gospel Topics essay "The Manifesto and the End of Plural Marriage"; mormonr.org.',
+ opts:[
+  {y:'O', t:'Revelation. The Lord ended the practice through His prophet.'},
+  {y:'T', t:'An inspired pause of an eternal principle that is still in the scriptures.'},
+  {y:'F', t:'Yielding to government force. Notice that approved plural marriages continued for years afterward.'},
+  {y:'P', t:'A survival decision made under pressure, described as revelation after the fact.'}
+ ]},
+
+{sec:4, kind:'L', agree:'F', disagree:'O',
+ title:'"There has not been frequent, high-quality revelation in the church since the death of Joseph Smith."',
+ ctx:'Joseph produced well over one hundred canonized revelations in about fifteen years. Since his death in 1844, the canon has added only a handful: section 136 (1847), section 138 (1918), and the two Official Declarations.',
+ src:'Sources: Doctrine and Covenants contents; josephsmithpapers.org.'},
+
+{sec:4, kind:'L', agree:'P', disagree:'O',
+ title:'"The church should formally apologize for the priesthood and temple ban."',
+ ctx:'Church leaders have expressed regret but never formally apologized. Elder Dallin H. Oaks said in 2015 that the church does not seek apologies, "and we don\'t give them."',
+ src:'Sources: Oaks remarks, Jan. 2015 (Salt Lake Tribune coverage); Gospel Topics essay "Race and the Priesthood."'},
+
+{sec:4, kind:'L', agree:'F', disagree:'T',
+ title:'"Where Brigham Young and Joseph Smith taught differently, I side with Joseph."',
+ ctx:'Places they differed: Adam-God, and the priesthood ban (Joseph ordained Black men; the ban arose under Brigham).',
+ src:'Sources: mormonr.org (Adam-God); Gospel Topics essay "Race and the Priesthood."'},
+
+{sec:4, kind:'MC',
+ title:'How should the church teach its history to the youth?',
+ ctx:'Saints is the church\'s official four-volume narrative history, written for general readers and begun in 2018.',
+ src:'Source: churchofjesuschrist.org (Saints).',
+ opts:[
+  {y:'O', t:'The official materials, like the Saints volumes, strike the right balance.'},
+  {y:'T', t:'Milk before meat. Build faith first. The hard material can wait, maybe forever.'},
+  {y:'F', t:'Teach the founding events straight from the original sources, strangeness and all.'},
+  {y:'P', t:'Age-appropriate but fully honest. They will find everything online anyway.'}
+ ]},
+
+// ---------- Section VI: Money and Practice ----------
+{sec:5, kind:'MC',
+ title:'What is an honest tithing?',
+ ctx:'The original revelation, D&C 119 (1838), defined tithing as one-tenth of "interest" each year, after surplus property was consecrated. The modern church leaves the definition of income to each member.',
+ src:'Sources: D&C 119; Gospel Topics, "Tithing"; mormonr.org.',
+ opts:[
+  {y:'O', t:'Ten percent of my income, as the church teaches today.'},
+  {y:'T', t:'Ten percent of gross pay. Paying on the net shortchanges the Lord.'},
+  {y:'F', t:'The original revelation said one-tenth of surplus, after needs are met. That definition deserves to be taken seriously.'},
+  {y:'P', t:'Generosity matters more than the formula, which has changed over church history.'}
+ ]},
+
+{sec:5, kind:'MC',
+ title:'The church holds investment reserves estimated at well over one hundred billion dollars and does not publish its finances:',
+ ctx:'The reserve fund, managed by Ensign Peak Advisors, became public through a 2019 whistleblower disclosure. The church stopped publishing detailed financial reports in the late 1950s, and in 2023 it settled with the SEC over how the fund\'s holdings were disclosed.',
+ src:'Sources: 2019 whistleblower reporting; SEC settlement statement, Feb. 2023; churchofjesuschrist.org newsroom.',
+ opts:[
+  {y:'O', t:'The Brethren are wise stewards preparing for the future. I trust them with the widow\'s mite.'},
+  {y:'T', t:"The Lord's money is between the church and the Lord. The criticism itself is faithless."},
+  {y:'F', t:'The early church practiced consecration and open books. The corporate secrecy is the real departure.'},
+  {y:'P', t:'An institution this size should publish audited finances like other large churches and charities.'}
+ ]},
+
+{sec:5, kind:'L', agree:'O', disagree:'P',
+ title:'"The church changes its policies mainly through revelation, not social or legal pressure."',
+ ctx:'Test cases: polygamy ended in 1890 under federal pressure, and the priesthood ban ended in 1978 after years of civil rights pressure and the challenge of the new Brazil temple.',
+ src:'Sources: Gospel Topics essays; Edward Kimball, "Spencer W. Kimball and the Revelation on Priesthood" (BYU Studies).'},
+
+{sec:5, kind:'L', agree:'P', disagree:'O',
+ title:'"It can be appropriate for faithful members to publicly disagree with church leaders."',
+ ctx:'Not private doubts. Open, public disagreement, like writing or speaking about it. Compare Elder Oaks: "It\'s wrong to criticize leaders of the Church, even if the criticism is true."',
+ src:'Source: Dallin H. Oaks, 1985 address, reaffirmed in a 2007 PBS interview.'},
+
+{sec:5, kind:'MC',
+ title:'The Word of Wisdom was given "not by commandment or constraint," and early Saints drank coffee, tea, and alcohol. Today it is required for a temple recommend. What do you make of that?',
+ ctx:'D&C 89:2. Brigham Young operated a distillery, and beer and wine were common among early Saints. Strict enforcement arrived in the early 1900s under Heber J. Grant.',
+ src:'Sources: D&C 89; church history topic "Word of Wisdom" (history.churchofjesuschrist.org); mormonr.org.',
+ opts:[
+  {y:'O', t:'Ongoing revelation turned counsel into commandment through the prophets. That is exactly how it should work.'},
+  {y:'T', t:'It was always meant to become binding. The early Saints were just slow to live it.'},
+  {y:'F', t:"The revelation's own words matter. Modern enforcement goes beyond what the Lord said through Joseph."},
+  {y:'P', t:'A health code shaped by the temperance movement of its era, which hardened into a membership test.'}
+ ]},
+
+{sec:5, kind:'MC',
+ title:'What should church religion classes (BYU, seminary, institute) focus on?',
+ opts:[
+  {y:'O', t:'The current curriculum, centered on living prophets and official materials.'},
+  {y:'T', t:'The doctrinal classics: Talmage, Joseph Fielding Smith, McConkie.'},
+  {y:'F', t:"The revelations themselves and Joseph Smith's original words."},
+  {y:'P', t:'Faith alongside real scholarship, including the hard questions.'}
+ ]},
+
+// ---------- Section VII: Modern Questions ----------
+{sec:6, kind:'MC',
+ title:'In 2015 the church barred children of same-sex couples from baptism and labeled gay marriage apostasy. In 2019 it reversed the policy:',
+ ctx:'President Nelson described the 2015 policy in a January 2016 devotional as the will of the Lord revealed to President Monson. The 2019 reversal was also announced as directed by the Lord.',
+ src:'Sources: church newsroom announcements, Nov. 2015 and Apr. 2019; Russell M. Nelson, "Becoming True Millennials," Jan. 2016.',
+ opts:[
+  {y:'O', t:'Both were revelation for their moment. The Lord can change direction through His prophets.'},
+  {y:'T', t:'The 2015 policy drew a needed line. Reversing it under public pressure concerns me.'},
+  {y:'F', t:'Neither was revelation. Real revelation has been scarce since the death of Joseph Smith.'},
+  {y:'P', t:'The policy was a harmful mistake, and the reversal was the right correction.'}
+ ]},
+
+{sec:6, kind:'L', agree:'T', disagree:'P',
+ title:'"The Family: A Proclamation to the World should be canonized into our scripture."',
+ ctx:'Issued by the First Presidency in 1995, quoted constantly and treated as near-scripture, but never presented to the church for canonization. In October 2010, President Packer called it a revelation over the pulpit; the printed version was changed to call it a guide.',
+ src:'Sources: churchofjesuschrist.org (the Proclamation); Oct. 2010 conference report and the published text of Packer\'s talk.'},
+
+{sec:6, kind:'L', agree:'P', disagree:'T',
+ title:'"Someday, women will be ordained to the priesthood."',
+ ctx:'Not asking whether you want it to happen. Asking what you think will happen.',
+ src:'Source: Gospel Topics essay "Joseph Smith\'s Teachings about Priesthood, Temple, and Women."'},
+
+{sec:6, kind:'MC',
+ title:'After weighing everything, which source do you find yourself leaning on most when deciding what is true?',
+ opts:[
+  {y:'O', t:'The current prophet.'},
+  {y:'T', t:'Former church thought leaders, like Joseph Fielding Smith and Bruce R. McConkie.'},
+  {y:'F', t:"Joseph Smith's beliefs and revelations."},
+  {y:'P', t:'Modern scholarship and science.'}
+ ]}
+];
+
+// ---------------- Summaries ----------------
+const TYPE_SUMMARY = {
+ O:"Your loyalty sits with the living church. You trust that God leads through today's prophet, and when teachings shift you read that as ongoing revelation rather than inconsistency. Old quotes do not rattle you, because in your view the church was never anchored to its past. Its anchor moves with the Brethren.",
+ T:"Your loyalty sits with the doctrinal era of the Restoration, the framework built by teachers like Joseph Fielding Smith, Bruce R. McConkie, and James E. Talmage. For you, revealed truth is settled and knowable. You are most at home when the modern church holds that line, and most uneasy when it softens, revises, or goes quiet on teachings you consider eternal.",
+ F:"Your loyalty sits with Joseph Smith and the original Restoration. You measure everything, including the modern church, against the founding revelations, and early teachings that sound strange today do not scare you. Where others see change as refinement, you tend to ask what was lost. (This describes a doctrinal orientation, not the polygamist movements that use a similar name.)",
+ P:"Your loyalty sits with evidence. You want a faith that survives contact with history, science, and scholarship, and you expect the institution to be transparent and correctable. You are comfortable saying prophets are products of their time, and you weigh teachings by whether they are true and good, not by who said them."
+};
+const PAIR_SUMMARY = {
+ 'OT':"You trust prophetic authority deeply, but part of you is loyal to an older, firmer version of the church. You follow the Brethren today while quietly wishing they still taught with the doctrinal confidence of an earlier era.",
+ 'FO':"You honor both ends of the chain: the living prophet and the founding prophet. You are happiest when they clearly agree, and your real wrestle begins where Joseph's teachings and modern emphasis pull apart.",
+ 'OP':"You are an institutionalist who reads the footnotes. You sustain the church and its leaders while staying fully awake to the historical and scientific questions, and you tend to trust the institution to keep correcting itself.",
+ 'FT':"You are loyal to the old paths: the founding revelations and the doctrinal teachers who organized them. You likely feel the modern church has gone quiet on truths it once declared boldly, and you hold to those truths anyway.",
+ 'PT':"A rare mix: you take revealed truth seriously as a real, knowable system, and you take evidence just as seriously. You feel the pull of both certainty and scholarship, and you refuse to fake either one.",
+ 'FP':"You go to the sources. Original documents, first-hand accounts, and honest history matter more to you than official summaries, whatever conclusion they point to. You share a method with the historians and a heritage with Joseph."
+};
+const MIXED_SUMMARY = "Your answers spread fairly evenly across all four orientations. Either you hold a genuinely blended faith, or you are still working out where your loyalties sit. Both are honest places to be.";
+
+// ---------------- Engine ----------------
+let idx = 0;
+let answers = new Array(Q.length).fill(null); // number | {first,second} | 'unsure' | null
+let pickFirst = null;   // in-progress first pick for RANK or dual MC
+let dualOn = false;     // dual-select mode for the current MC question
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0});
+}
+
+function startQuiz(){ idx = 0; renderQuestion(); show('scr-question'); }
+
+function setProgress(){
+  document.getElementById('gilt-fill').style.width = Math.round((idx/Q.length)*100) + '%';
+}
+
+function renderQuestion(){
+  const q = Q[idx];
+  setProgress();
+  pickFirst = null;
+  const saved = answers[idx];
+  dualOn = (q.kind==='MC' && saved !== null && typeof saved === 'object');
+
+  document.getElementById('q-section').textContent = ROMAN[q.sec] + ' \u00B7 ' + SECTIONS[q.sec];
+  document.getElementById('q-progress').textContent = (idx+1) + ' of ' + Q.length;
+  document.getElementById('q-num').textContent = (idx+1) + '.';
+  document.getElementById('q-text').textContent = q.title;
+  document.getElementById('q-back').style.visibility = idx===0 ? 'hidden' : 'visible';
+  document.getElementById('q-count-note').textContent = SECTIONS[q.sec];
+
+  const tog = document.getElementById('q-ctx-toggle');
+  const body = document.getElementById('q-ctx-body');
+  tog.classList.remove('open'); body.classList.remove('open');
+  if(q.ctx || q.src){
+    tog.style.display='inline-block';
+    body.innerHTML = (q.ctx ? esc(q.ctx) : '') + (q.src ? '<span class="ctx-src">'+esc(q.src)+'</span>' : '');
+  } else { tog.style.display='none'; body.innerHTML=''; }
+
+  renderOptions(q, saved);
+}
+
+function renderOptions(q, saved){
+  const box = document.getElementById('q-opts');
+  const hint = document.getElementById('q-rank-hint');
+  box.innerHTML = '';
+  hint.style.display = (q.kind==='RANK' || dualOn) ? 'block' : 'none';
+
+  if(q.kind==='L'){
+    LIKERT.forEach((label,i)=>{
+      const b = mkOpt(label, saved===i);
+      b.onclick = ()=>{ answers[idx]=i; advance(b); };
+      box.appendChild(b);
+    });
+    return;
+  }
+
+  const isPair = (q.kind==='RANK') || dualOn;
+  const cur = (saved && typeof saved==='object') ? saved : null;
+
+  q.opts.forEach((o,i)=>{
+    const b = mkOpt(o.t, !isPair && saved===i);
+    if(isPair && cur){
+      if(cur.first===i){ b.classList.add('selected'); b.innerHTML='<span class="rank-badge">1st</span>'+esc(o.t); }
+      if(cur.second===i){ b.classList.add('selected'); b.innerHTML='<span class="rank-badge">2nd</span>'+esc(o.t); }
+    }
+    b.onclick = ()=> isPair ? pairPick(i, q, box) : singlePick(i, b, box);
+    box.appendChild(b);
+  });
+
+  if(q.kind==='MC'){
+    const d = document.createElement('button');
+    d.type='button'; d.className='dual-btn';
+    d.textContent = dualOn ? 'Back to a single choice' : 'Torn between two? Pick a 1st and a 2nd choice';
+    d.onclick = toggleDual;
+    box.appendChild(d);
+  }
+
+  const u = mkOpt(UNSURE, saved==='unsure'); u.classList.add('unsure');
+  u.onclick = ()=>{ answers[idx]='unsure'; advance(u); };
+  box.appendChild(u);
+}
+
+function mkOpt(text, selected){
+  const b = document.createElement('button');
+  b.className = 'opt' + (selected ? ' selected' : '');
+  b.type = 'button';
+  b.textContent = text;
+  return b;
+}
+
+function singlePick(i, btn, box){
+  answers[idx] = i;
+  advance(btn);
+}
+
+function pairPick(i, q, box){
+  if(pickFirst===null){
+    pickFirst = i;
+    answers[idx] = null;
+    Array.from(box.children).forEach((el,k)=>{
+      if(k < q.opts.length){ el.classList.remove('selected'); el.innerHTML = esc(q.opts[k].t); }
+    });
+    const el = box.children[i];
+    el.classList.add('selected');
+    el.innerHTML = '<span class="rank-badge">1st</span>' + esc(q.opts[i].t);
+  } else if(i === pickFirst){
+    pickFirst = null;
+    renderQuestion();
+  } else {
+    answers[idx] = {first: pickFirst, second: i};
+    const el = box.children[i];
+    el.classList.add('selected');
+    el.innerHTML = '<span class="rank-badge">2nd</span>' + esc(q.opts[i].t);
+    pickFirst = null;
+    setTimeout(next, 320);
+  }
+}
+
+function toggleDual(){
+  dualOn = !dualOn;
+  pickFirst = null;
+  answers[idx] = null;
+  const q = Q[idx];
+  renderOptions(q, null);
+}
+
+function toggleCtx(){
+  document.getElementById('q-ctx-toggle').classList.toggle('open');
+  document.getElementById('q-ctx-body').classList.toggle('open');
+}
+
+function advance(btn){
+  const box = document.getElementById('q-opts');
+  Array.from(box.children).forEach(el=>el.classList.remove('selected'));
+  btn.classList.add('selected');
+  setTimeout(next, 240);
+}
+
+function next(){
+  if(idx < Q.length-1){ idx++; renderQuestion(); }
+  else { showResults(); }
+}
+function goBack(){ if(idx>0){ idx--; renderQuestion(); } }
+
+// ---------------- Scoring and results ----------------
+function addPts(t, opt, mult){
+  if(opt.pts){ for(const k in opt.pts) t[k] += opt.pts[k]*mult; }
+  else t[opt.y] += 2*mult;
+}
+
+function computeTotals(){
+  const t = {O:0,T:0,F:0,P:0};
+  let unsureCount = 0;
+  Q.forEach((q,i)=>{
+    const a = answers[i];
+    if(a===null || a==='unsure'){ if(a==='unsure') unsureCount++; return; }
+    if(q.kind==='L'){
+      if(a===0) t[q.agree]+=2;
+      else if(a===1) t[q.agree]+=1;
+      else if(a===2) unsureCount++;
+      else if(a===3) t[q.disagree]+=1;
+      else if(a===4) t[q.disagree]+=2;
+    } else if(typeof a === 'object'){
+      addPts(t, q.opts[a.first], 1);
+      addPts(t, q.opts[a.second], 0.5);
+    } else {
+      addPts(t, q.opts[a], 1);
+    }
+  });
+  return {t, unsureCount};
+}
+
+function showResults(){
+  document.getElementById('gilt-fill').style.width = '100%';
+  const {t, unsureCount} = computeTotals();
+  const sum = t.O+t.T+t.F+t.P;
+  const keys = ['O','T','F','P'];
+  const pct = {};
+  keys.forEach(k=> pct[k] = sum ? Math.round((t[k]/sum)*100) : 0);
+  const sorted = keys.slice().sort((a,b)=> t[b]-t[a]);
+
+  drawDonut(pct, sorted, sum);
+  drawLegend(pct, sorted);
+  drawSummaries(pct, sorted, sum);
+
+  const un = document.getElementById('unsure-note');
+  un.textContent = unsureCount >= 10
+    ? 'You answered "not sure" or neutral ' + unsureCount + ' times, so treat this profile as a sketch. The questions you passed on make a good list of things to explore next.'
+    : '';
+  show('scr-results');
+}
+
+function drawDonut(pct, sorted, sum){
+  const wrap = document.getElementById('donut');
+  const size=240, r=92, cx=size/2, cy=size/2, C=2*Math.PI*r;
+  let offset = 0;
+  let rings = '';
+  if(sum===0){
+    rings = '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="#D8D0BC" stroke-width="30"/>';
+  } else {
+    ['O','T','F','P'].forEach(k=>{
+      const frac = pct[k]/100;
+      if(frac<=0) return;
+      const len = frac*C;
+      rings += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+TYPES[k].hex+'" stroke-width="30" stroke-dasharray="'+len+' '+(C-len)+'" stroke-dashoffset="'+(-offset)+'" transform="rotate(-90 '+cx+' '+cy+')"/>';
+      offset += len;
+    });
+  }
+  const primary = sum===0 ? 'No answers' : TYPES[sorted[0]].name;
+  wrap.innerHTML =
+    '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" role="img" aria-label="Result chart">' +
+    rings +
+    '<text x="'+cx+'" y="'+(cy-8)+'" text-anchor="middle" class="donut-center-label">Primary</text>' +
+    '<text x="'+cx+'" y="'+(cy+18)+'" text-anchor="middle" class="donut-center-type">'+esc(primary)+'</text>' +
+    '</svg>';
+}
+
+function drawLegend(pct, sorted){
+  const el = document.getElementById('legend');
+  el.innerHTML = sorted.map(k=>
+    '<div class="legend-row"><span class="legend-swatch" style="background:'+TYPES[k].hex+'"></span>' +
+    '<span class="legend-name">'+TYPES[k].name+'</span>' +
+    '<span class="legend-pct">'+pct[k]+'%</span></div>'
+  ).join('');
+}
+
+function drawSummaries(pct, sorted, sum){
+  const el = document.getElementById('summaries');
+  if(sum===0){
+    el.innerHTML = '<div class="summary-card"><p>Every answer was neutral or not sure, so there is no profile to draw yet. Retake it whenever some of these questions stop being new.</p></div>';
+    return;
+  }
+  const top=sorted[0], second=sorted[1];
+  const spread = pct[sorted[0]] - pct[sorted[3]];
+  let html = '';
+
+  if(spread <= 12){
+    html += card('A Genuine Blend', MIXED_SUMMARY);
+    html += card('Your strongest lean: ' + TYPES[top].name, TYPE_SUMMARY[top]);
+  } else if(pct[top] - pct[second] >= 15){
+    html += card('Primary: ' + TYPES[top].name, TYPE_SUMMARY[top]);
+    html += card('Secondary: ' + TYPES[second].name, 'Your second-strongest pull. ' + TYPE_SUMMARY[second]);
+  } else {
+    const pairKey = [top,second].sort().join('');
+    html += card(TYPES[top].name + ' / ' + TYPES[second].name, PAIR_SUMMARY[pairKey] || '');
+    html += card('Primary: ' + TYPES[top].name, TYPE_SUMMARY[top]);
+    html += card('Secondary: ' + TYPES[second].name, TYPE_SUMMARY[second]);
+  }
+  el.innerHTML = html;
+}
+
+function card(h, body){
+  return '<div class="summary-card"><h3>'+esc(h)+'</h3><p>'+esc(body)+'</p></div>';
+}
+
+function retake(){
+  answers = new Array(Q.length).fill(null);
+  idx = 0;
+  document.getElementById('gilt-fill').style.width = '0%';
+  show('scr-intro');
+}
+</script>
+</body>
+</html>
