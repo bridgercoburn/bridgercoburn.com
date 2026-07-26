@@ -51,6 +51,17 @@
   .btn:focus-visible,button:focus-visible{outline:2px solid var(--gilt);outline-offset:3px}
   .btn-row{text-align:center}
   .btn-row .btn{margin:4px 6px}
+
+  /* Share preview modal */
+  .share-modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+  .share-modal[hidden]{display:none}
+  .share-backdrop{position:absolute;inset:0;background:rgba(38,33,26,.62)}
+  .share-panel{position:relative;background:var(--paper);border:1px solid var(--hairline);
+    border-top:4px solid var(--gilt);border-radius:4px;padding:16px 16px 12px;
+    width:100%;max-width:340px;max-height:calc(100vh - 40px);overflow:auto;
+    box-shadow:0 18px 50px rgba(0,0,0,.35);text-align:center}
+  .share-panel img{display:block;width:100%;height:auto;border:1px solid var(--hairline)}
+  .share-hint{font-family:var(--sans);font-size:12.5px;color:var(--pencil);margin:10px 4px 10px;line-height:1.5}
   .btn-ghost{background:none;border:1px solid var(--hairline);color:var(--ink-soft)}
   .btn-ghost:hover{background:var(--paper-deep)}
 
@@ -139,14 +150,29 @@
     </div>
     <div class="donut-wrap" id="donut"></div>
     <div class="legend" id="legend"></div>
+    <div class="btn-row" style="margin:20px 0 8px">
+      <button class="btn" id="share-open" onclick="shareResults()">Share my results</button>
+    </div>
     <div id="summaries"></div>
     <p class="unsure-note" id="unsure-note"></p>
     <div class="btn-row" style="margin-top:10px">
-      <button class="btn" onclick="shareResults()">Share my results</button>
       <button class="btn btn-ghost" onclick="retake()">Retake the quiz</button>
     </div>
   </section>
 
+</div>
+
+<!-- SHARE PREVIEW -->
+<div class="share-modal" id="share-modal" role="dialog" aria-modal="true" aria-label="Your results image" hidden>
+  <div class="share-backdrop" onclick="closeShare()"></div>
+  <div class="share-panel">
+    <img id="share-img" alt="Your quiz results, rendered as a shareable image.">
+    <p class="share-hint" id="share-hint"></p>
+    <div class="btn-row">
+      <button class="btn" id="share-save" onclick="saveShareImage()">Save photo</button>
+      <button class="btn btn-ghost" onclick="closeShare()">Close</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -998,12 +1024,36 @@ function drawShareCard(res){
   return c;
 }
 
+let shareDataUrl = null;
+
+// Opens a preview of the image first, so people see exactly what they are
+// saving. The actual save happens from the modal's button (or by pressing
+// on the image itself, which is the native gesture on phones).
 function shareResults(){
   if(!lastResult) return;
-  const canvas = drawShareCard(lastResult);
-  // Build the blob synchronously (toDataURL, not toBlob) so the share call
-  // still counts as part of the tap — iOS Safari refuses share() otherwise.
-  const bin = atob(canvas.toDataURL('image/png').split(',')[1]);
+  shareDataUrl = drawShareCard(lastResult).toDataURL('image/png');
+  document.getElementById('share-img').src = shareDataUrl;
+
+  const touch = window.matchMedia('(pointer:coarse)').matches;
+  const hint = document.getElementById('share-hint');
+  const save = document.getElementById('share-save');
+  if(touch && navigator.canShare){
+    save.textContent = 'Save photo';
+    hint.textContent = 'Tap Save photo, or touch and hold the image above.';
+  } else {
+    save.textContent = 'Download photo';
+    hint.textContent = 'Click Download photo, or right-click the image to save it.';
+  }
+
+  document.getElementById('share-modal').hidden = false;
+  save.focus();
+}
+
+function saveShareImage(){
+  if(!shareDataUrl) return;
+  // Blob is built synchronously so the share call still counts as part of
+  // the tap — iOS Safari refuses share() after an async hop.
+  const bin = atob(shareDataUrl.split(',')[1]);
   const bytes = new Uint8Array(bin.length);
   for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
   const blob = new Blob([bytes], {type:'image/png'});
@@ -1018,6 +1068,16 @@ function shareResults(){
     downloadBlob(blob);
   }
 }
+
+function closeShare(){
+  document.getElementById('share-modal').hidden = true;
+  const opener = document.getElementById('share-open');
+  if(opener) opener.focus();
+}
+
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && !document.getElementById('share-modal').hidden) closeShare();
+});
 
 function downloadBlob(blob){
   const a=document.createElement('a');
