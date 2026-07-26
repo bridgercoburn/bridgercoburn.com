@@ -5,6 +5,10 @@ export type Post = {
   blurb: string;
   /** ISO date, e.g. "2026-07-26". Used for ordering and the byline. */
   date: string;
+  /** Card background, in `public/images/`. Landscape crops best (3:2). */
+  image: string;
+  /** Describes the picture for screen readers. Do not repeat the title. */
+  imageAlt: string;
   /** Text on the call-to-action line. */
   cta?: string;
 };
@@ -17,6 +21,9 @@ export const posts: Post[] = [
     blurb:
       "A fifty-question look at where your loyalties sit when the sources disagree. Orthodox, Traditional, Fundamental, or Progressive.",
     date: "2026-07-26",
+    image: "/images/lds-quiz.jpg",
+    imageAlt:
+      "Painting of two nineteenth-century men talking in a general store, one resting a hand on the other's shoulder.",
     cta: "Take the quiz",
   },
 ];
